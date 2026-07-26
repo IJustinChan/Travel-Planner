@@ -270,22 +270,155 @@ def add_flight(flight_data):
     except Exception as e:
         print(f"Error creating flight: {e}")
         return False
+    
+def add_extra_cost(extra_cost_data):
+    """
+    Save a new extra cost to the database and returns true if successful, false otherwise.
+    :param extra_cost_data: Dictionary containing extra cost information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO ExtraCosts 
+            (trip_id, cost_name, cost_amount, cost_date, description)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            extra_cost_data.get('trip_id'),
+            extra_cost_data.get('cost_name'),
+            extra_cost_data.get('cost_amount') or 0,
+            extra_cost_data.get('cost_date'),
+            extra_cost_data.get('description')
+        ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error creating extra cost: {e}")
+        return False
 
 # --- Retrieve Database Information ---
 def get_trips():
     """
     Retrieve all trips from the database
+    :return: List of trips
     """
     try:
         connection = sqlite3.connect(database_name)
         connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM TripInfo ORDER BY start_date DESC')
-        trips = cursor.fetchall()
+        trips = cursor.execute('''
+            SELECT
+                * 
+            FROM 
+                TripInfo 
+            ORDER BY 
+                start_date DESC''').fetchall()
         connection.close()
         return trips
     except Exception as e:
         print(f"Error retrieving trips: {e}")
+        return []
+
+def get_activities(trip_id):
+    """
+    Retrieve all activities for a specific trip from the database
+    :param trip_id: ID of the trip
+    :return: List of activities
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        activities = cursor.execute('''
+            SELECT 
+                * 
+            FROM 
+                Activities 
+            WHERE 
+                trip_id = ? 
+            ORDER BY 
+                activity_date ASC''', (trip_id,)).fetchall()
+        connection.close()
+        return activities
+    except Exception as e:
+        print(f"Error retrieving activities: {e}")
+        return []
+    
+def get_hotels(trip_id):
+    """
+    Retrieve all hotels for a specific trip from the database
+    :param trip_id: ID of the trip
+    :return: List of hotels
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        hotels = cursor.execute('''
+            SELECT 
+                * 
+            FROM 
+                Hotels 
+            WHERE 
+                trip_id = ? 
+            ORDER BY 
+                check_in_date ASC''', (trip_id,)).fetchall()
+        connection.close()
+        return hotels
+    except Exception as e:
+        print(f"Error retrieving hotels: {e}")
+        return []
+
+def get_flights(trip_id):
+    """
+    Retrieve all flights for a specific trip from the database
+    :param trip_id: ID of the trip
+    :return: List of flights
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        flights = cursor.execute('''
+            SELECT 
+                * 
+            FROM 
+                Flights 
+            WHERE 
+                trip_id = ? 
+            ORDER BY 
+                departure_date ASC''', (trip_id,)).fetchall()
+        connection.close()
+        return flights
+    except Exception as e:
+        print(f"Error retrieving flights: {e}")
+        return []
+    
+def get_extra_costs(trip_id):
+    """
+    Retrieve all extra costs for a specific trip from the database
+    :param trip_id: ID of the trip
+    :return: List of extra costs
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        extra_costs = cursor.execute('''
+            SELECT 
+                * 
+            FROM 
+                ExtraCosts 
+            WHERE 
+                trip_id = ? 
+            ORDER BY 
+                cost_date ASC''', (trip_id,)).fetchall()
+        connection.close()
+        return extra_costs
+    except Exception as e:
+        print(f"Error retrieving extra costs: {e}")
         return []
 
 # --- Webpages ---
