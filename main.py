@@ -11,12 +11,13 @@ app.secret_key = 'travel_planner_secret_key' # For flash messages
 # --- Database Setup ---
 def set_up_database():
     """
-    Set up the database by creating necessary tables if they don't exist.
+    Set up the database by creating necessary tables
     """
     create_trip_info_table()
     create_activity_table()
     create_hotel_table()
     create_extra_costs_table()
+    create_flight_table()
 
 def create_trip_info_table():
     """
@@ -97,6 +98,33 @@ def create_hotel_table():
     except Exception as e:
         print(f"Database initialization error: {e}")
 
+def create_flight_table():
+    """
+    Create a table for storing flight information related to trips in the database.
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            CREATE TABLE Flights (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trip_id INTEGER NOT NULL,
+                airline TEXT NOT NULL,
+                flight_number TEXT NOT NULL,
+                departure_date DATE NOT NULL,
+                departure_time TIME NOT NULL,
+                arrival_date DATE NOT NULL,
+                arrival_time TIME NOT NULL,
+                cost REAL,
+                description TEXT,
+                FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
+            )
+        ''')
+        connection.commit()
+        connection.close()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
 def create_extra_costs_table():
     """
     Create a table for storing extra costs related to trips in the database.
@@ -120,25 +148,12 @@ def create_extra_costs_table():
     except Exception as e:
         print(f"Database initialization error: {e}")
 
-def get_trips():
+# --- Add into Database ---
+def add_trip(trip_data):
     """
-    Retrieve all trips from the database
-    """
-    try:
-        connection = sqlite3.connect(database_name)
-        connection.row_factory = sqlite3.Row
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM TripInfo ORDER BY start_date DESC')
-        trips = cursor.fetchall()
-        connection.close()
-        return trips
-    except Exception as e:
-        print(f"Error retrieving trips: {e}")
-        return []
-
-def create_trip(trip_data):
-    """
-    Save a new trip to the database
+    Save a new trip to the database and returns true if successful, false otherwise.
+    :param trip_data: Dictionary containing trip information
+    :return: Boolean indicating success or failure
     """
     try:
         connection = sqlite3.connect(database_name)
@@ -165,6 +180,113 @@ def create_trip(trip_data):
     except Exception as e:
         print(f"Error creating trip: {e}")
         return False
+    
+def add_activity(activity_data):
+    """
+    Save a new activity to the database and returns true if successful, false otherwise.
+    :param activity_data: Dictionary containing activity information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO Activities 
+            (trip_id, activity_name, activity_type, activity_date, activity_time, location, description, cost)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            activity_data.get('trip_id'),
+            activity_data.get('activity_name'),
+            activity_data.get('activity_type'),
+            activity_data.get('activity_date'),
+            activity_data.get('activity_time'),
+            activity_data.get('location'),
+            activity_data.get('description'),
+            activity_data.get('cost') or 0
+        ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error creating activity: {e}")
+        return False
+    
+def add_hotel(hotel_data):
+    """
+    Save a new hotel to the database and returns true if successful, false otherwise.
+    :param hotel_data: Dictionary containing hotel information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO Hotels 
+            (trip_id, hotel_name, check_in_date, check_out_date, location, cost_per_day, num_days)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            hotel_data.get('trip_id'),
+            hotel_data.get('hotel_name'),
+            hotel_data.get('check_in_date'),
+            hotel_data.get('check_out_date'),
+            hotel_data.get('location'),
+            hotel_data.get('cost_per_day') or 0,
+            hotel_data.get('num_days') or 1
+        ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error creating hotel: {e}")
+        return False
+    
+def add_flight(flight_data):
+    """
+    Save a new flight to the database and returns true if successful, false otherwise.
+    :param flight_data: Dictionary containing flight information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO Flights 
+            (trip_id, airline, flight_number, departure_date, departure_time, arrival_date, arrival_time, cost, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            flight_data.get('trip_id'),
+            flight_data.get('airline'),
+            flight_data.get('flight_number'),
+            flight_data.get('departure_date'),
+            flight_data.get('departure_time'),
+            flight_data.get('arrival_date'),
+            flight_data.get('arrival_time'),
+            flight_data.get('cost') or 0,
+            flight_data.get('description')
+        ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error creating flight: {e}")
+        return False
+
+# --- Retrieve Database Information ---
+def get_trips():
+    """
+    Retrieve all trips from the database
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo ORDER BY start_date DESC')
+        trips = cursor.fetchall()
+        connection.close()
+        return trips
+    except Exception as e:
+        print(f"Error retrieving trips: {e}")
+        return []
 
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
