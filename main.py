@@ -15,6 +15,8 @@ def set_up_database():
     """
     create_trip_info_table()
     create_activity_table()
+    create_hotel_table()
+    create_extra_costs_table()
 
 def create_trip_info_table():
     """
@@ -34,7 +36,7 @@ def create_trip_info_table():
                 budget REAL,
                 num_travelers INTEGER DEFAULT 1,
                 description TEXT,
-                travel_style TEXT,
+                    travel_mode TEXT,
                 companions TEXT,
                 created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -70,6 +72,54 @@ def create_activity_table():
     except Exception as e:
         print(f"Database initialization error: {e}")
 
+def create_hotel_table():
+    """
+    Create a table for storing hotel information related to trips in the database.
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            CREATE TABLE Hotels (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trip_id INTEGER NOT NULL,
+                hotel_name TEXT NOT NULL,
+                check_in_date DATE NOT NULL,
+                check_out_date DATE NOT NULL,
+                location TEXT,
+                cost_per_day REAL,
+                num_days INTEGER,
+                FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
+            )
+        ''')
+        connection.commit()
+        connection.close()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+def create_extra_costs_table():
+    """
+    Create a table for storing extra costs related to trips in the database.
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            CREATE TABLE ExtraCosts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trip_id INTEGER NOT NULL,
+                cost_name TEXT NOT NULL,
+                cost_amount REAL NOT NULL,
+                cost_date DATE NOT NULL,
+                description TEXT,
+                FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
+            )
+        ''')
+        connection.commit()
+        connection.close()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
 def get_trips():
     """
     Retrieve all trips from the database
@@ -78,7 +128,7 @@ def get_trips():
         connection = sqlite3.connect(database_name)
         connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM trips ORDER BY start_date DESC')
+        cursor.execute('SELECT * FROM TripInfo ORDER BY start_date DESC')
         trips = cursor.fetchall()
         connection.close()
         return trips
@@ -94,8 +144,8 @@ def create_trip(trip_data):
         connection = sqlite3.connect(database_name)
         cursor = connection.cursor()
         cursor.execute('''
-            INSERT INTO trips 
-            (trip_name, destination, country, start_date, end_date, budget, travelers, description, travel_style, companions)
+            INSERT INTO TripInfo 
+            (trip_name, destination, country, start_date, end_date, budget, num_travelers, description, travel_mode, companions)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             trip_data.get('trip_name'),
@@ -106,7 +156,7 @@ def create_trip(trip_data):
             trip_data.get('budget') or 0,
             trip_data.get('num_travelers') or 1,
             trip_data.get('description'),
-            trip_data.get('travel_style'),
+            trip_data.get('travel_mode'),
             trip_data.get('companions')
         ))
         connection.commit()
@@ -130,9 +180,9 @@ def home():
             'start_date': request.form.get('start_date'),
             'end_date': request.form.get('end_date'),
             'budget': request.form.get('budget'),
-            'travelers': request.form.get('travelers'),
+            'num_travelers': request.form.get('num_travelers'),
             'description': request.form.get('description'),
-            'travel_style': request.form.get('travel_style'),
+            'travel_mode': request.form.get('travel_mode'),
             'companions': request.form.get('companions')
         }
     
