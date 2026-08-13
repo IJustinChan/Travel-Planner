@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner - View Trips</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Trips You’ve Added</h1>
+            <p>Review your saved travel plans and keep your next adventure ready.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="recent-trips-section">
+            <h2>Your Trips ({{ trips|length }})</h2>
+            <div class="trips-grid">
+                {% if trips %}
+                    {% for trip in trips %}
+                        <div class="trip-card">
+                            <div class="trip-card-header">
+                                <h3>{{ trip['trip_name'] }}</h3>
+                                <div style="display:flex;gap:0.5rem;align-items:center;">
+                                    <span class="trip-badge">{{ trip['travel_mode'] or 'General' }}</span>
+                                    <a class="btn btn-primary" href="{{ url_for('plan_trip', trip_id=trip['id']) }}">Plan</a>
+                                </div>
+                            </div>
+                            <div class="trip-card-info">
+                                <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
+                                <p><strong>Duration:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+                                {% if trip['budget'] %}
+                                    <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget']) }}</p>
+                                {% endif %}
+                                {% if trip['num_travelers'] %}
+                                    <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] }}</p>
+                                {% endif %}
+                                {% if trip['description'] %}
+                                    <p><strong>Notes:</strong> {{ trip['description'][:100] }}{% if trip['description']|length > 100 %}...{% endif %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="trip-card">
+                        <div class="trip-card-header">
+                            <h3>No trips yet</h3>
+                        </div>
+                        <p class="trip-card-text">Start planning your first adventure by adding a new trip.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer"></footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
