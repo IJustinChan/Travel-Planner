@@ -424,8 +424,7 @@ def get_extra_costs(trip_id):
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    trips = []
-    
+    """Add a new trip."""
     if request.method == 'POST':
         # Extract form data
         trip_data = {
@@ -440,11 +439,51 @@ def home():
             'travel_mode': request.form.get('travel_mode'),
             'companions': request.form.get('companions')
         }
-    
-    # Get all trips to display
+
+        if not all([trip_data['trip_name'], trip_data['destination'], 
+                    trip_data['start_date'], trip_data['end_date']]):
+            flash('Please fill in all required fields!', 'error')
+        else:
+            if add_trip(trip_data):
+                flash(f"Trip '{trip_data['trip_name']}' created successfully!", 'success')
+                return redirect(url_for('view_trips'))
+            else:
+                flash('Error creating trip. Please try again.', 'error')
+
+    return render_template("home.html")
+
+@app.route("/trips")
+def view_trips():
+    """View all trips."""
     trips = get_trips()
-    
-    return render_template("home.html", trips=trips)
+    return render_template("trips.html", trips=trips)
+
+
+@app.route('/plan/<int:trip_id>')
+def plan_trip(trip_id):
+    """Plan a specific trip by id."""
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+
+        # Fetch related data
+        activities = get_activities(trip_id)
+        hotels = get_hotels(trip_id)
+        flights = get_flights(trip_id)
+
+        return render_template('plan.html', trip=trip, activities=activities, hotels=hotels, flights=flights)
+    except Exception as e:
+        print(f"Error loading trip for planning: {e}")
+        flash('Error loading trip.', 'error')
+        return redirect(url_for('view_trips'))
 
 if __name__ == "__main__":
     global database_name

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Trip - {{ trip['trip_name'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>{{ trip['trip_name'] }}</h1>
+            <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+            <p>Plan all your trip details here. Make your travel fun and memorable!</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="create-trip-section">
+            <h2>Overview of {{ trip['trip_name'] }}</h2>
+            <div class="trips-grid">
+                <div class="trip-card">
+                    <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
+                    <p><strong>Dates:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+                    <p><strong>Mode:</strong> {{ trip['travel_mode'] or 'General' }}</p>
+                    <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget'] or 0) }}</p>
+                </div>
+
+                <div class="trip-card">
+                    <h3>Flights</h3>
+                    {% if flights %}
+                        <ul>
+                            {% for f in flights %}
+                                <li>{{ f['departure_date'] }} {{ f['departure_time'] }} - {{ f['airline'] }} {{ f['flight_number'] }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No flights has been entered for this trip.</p>
+                    {% endif %}
+                </div>
+
+                <div class="trip-card">
+                    <h3>Accommodations</h3>
+                    {% if hotels %}
+                        <ul>
+                            {% for h in hotels %}
+                                <li>{{ h['hotel_name'] }}: {{ h['check_in_date'] }} to {{ h['check_out_date'] }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No hotels has been entered for this trip.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+            
+        </section>
+    </main>
+
+
+    <br>
+
+    <main class="container">
+        <div class="create-trip-section">
+            <h2>Activities</h2>
+            {% if activities %}
+                <ul>
+                    {% for act in activities %}
+                        <li>{{ act['activity_date'] }} - {{ act['activity_name'] }} ({{ act['activity_type'] }})</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No activities has been entered for this trip.</p>
+            {% endif %}
+        </div>
+    </main>
+
+
+    <br>
+
+    <main class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('view_trips') }}">Back to Trips</a>
+        </div>
+    </main>
+
+    <footer class="footer"></footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
