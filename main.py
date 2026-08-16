@@ -424,7 +424,9 @@ def get_extra_costs(trip_id):
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    """Add a new trip."""
+    """
+    Add a new trip.
+    """
     if request.method == 'POST':
         # Extract form data
         trip_data = {
@@ -454,14 +456,18 @@ def home():
 
 @app.route("/trips")
 def view_trips():
-    """View all trips."""
+    """
+    View all trips.
+    """
     trips = get_trips()
     return render_template("trips.html", trips=trips)
 
 
 @app.route('/plan/<int:trip_id>')
 def plan_trip(trip_id):
-    """Plan a specific trip by id."""
+    """
+    Plan a specific trip by id.
+    """
     try:
         connection = sqlite3.connect(database_name)
         connection.row_factory = sqlite3.Row
@@ -484,6 +490,78 @@ def plan_trip(trip_id):
         print(f"Error loading trip for planning: {e}")
         flash('Error loading trip.', 'error')
         return redirect(url_for('view_trips'))
+    
+@app.route('/add_activity/<int:trip_id>', methods=['POST'])
+def add_activity_route(trip_id):
+    """
+    Add a new activity to a specific trip.
+    """
+    pass
+
+@app.route('/add_hotel/<int:trip_id>', methods=['POST'])
+def add_hotel_route(trip_id):
+    """
+    Add a new hotel to a specific trip.
+    """
+    pass
+
+@app.route('/add_extra_cost/<int:trip_id>', methods=['POST'])
+def add_extra_cost_route(trip_id):
+    """
+    Add a new extra cost to a specific trip.
+    """
+    pass
+
+@app.route('/add_flight_route/<int:trip_id>', methods=['GET', 'POST'])
+def add_flight_route(trip_id):
+    """
+    Add a new flight to a specific trip.
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+        
+        flights = get_flights(trip_id)
+
+    except Exception as e:
+        print(f"Error loading trip for planning: {e}")
+        flash('Error loading add flight page.', 'error')
+        return redirect(url_for('view_trips'))
+
+    if request.method == 'POST':
+        flight_data = {
+            'trip_id': trip_id,
+            'airline': request.form.get('airline'),
+            'flight_number': request.form.get('flight_number'),
+            'departure_date': request.form.get('departure_date'),
+            'departure_time': request.form.get('departure_time'),
+            'arrival_date': request.form.get('arrival_date'),
+            'arrival_time': request.form.get('arrival_time'),
+            'cost': request.form.get('cost'),
+            'description': request.form.get('description')
+        }
+
+        if not all([flight_data['airline'], flight_data['flight_number'], flight_data['departure_date'], flight_data['arrival_date']]):
+            flash('Please fill in all required fields for the flight!', 'error')
+        else:
+            if add_flight(flight_data):
+                flash(f"Flight '{flight_data['flight_number']}' added successfully!", 'success')
+            else:
+                flash('Error adding flight. Please try again.', 'error')
+
+        return redirect(url_for('plan_trip', trip_id=trip_id))
+    
+    return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights)
+
+
 
 if __name__ == "__main__":
     global database_name

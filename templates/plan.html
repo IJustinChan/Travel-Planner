@@ -45,8 +45,11 @@
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p>No flights has been entered for this trip.</p>
+                        <p>No flights have been entered for this trip.</p>
                     {% endif %}
+                    <div class="form-actions" style="margin-top: 1rem;">
+                        <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_flight_route', trip_id=trip['id']) }}">Add Flight</a>
+                    </div>
                 </div>
 
                 <div class="trip-card">
@@ -58,7 +61,7 @@
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p>No hotels has been entered for this trip.</p>
+                        <p>No hotels have been entered for this trip.</p>
                     {% endif %}
                 </div>
 
@@ -74,13 +77,34 @@
         <div class="create-trip-section">
             <h2>Activities</h2>
             {% if activities %}
+                <!-- <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Activity</th>
+                        <th>Type</th>
+                        <th>Edit Activity</th>
+                        <th>Notes</th>
+                        <th>Remove Activity</th>
+                    </tr>
+                    {% for act in activities %}
+                    <tr>
+                        <td>{{ act['activity_date'] }}</td>
+                        <td>{{ act['activity_name'] }}</td>
+                        <td>{{ act['activity_type'] }}</td>
+                        <td><a href="{{ url_for('edit_activity', activity_id=act['id']) }}" class="btn btn-primary">Edit</a></td>
+                        <td>{{ act['notes'] }}</td>
+                        <td><a href="{{ url_for('remove_activity', activity_id=act['id']) }}" class="btn btn-danger">Remove</a></td>
+                    </tr>
+                    {% endfor %}
+                </table> -->
+
                 <ul>
                     {% for act in activities %}
                         <li>{{ act['activity_date'] }} - {{ act['activity_name'] }} ({{ act['activity_type'] }})</li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No activities has been entered for this trip.</p>
+                <p>No activities have been entered for this trip.</p>
             {% endif %}
         </div>
     </main>

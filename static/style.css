@@ -265,6 +265,12 @@ main {
     flex: 1;
 }
 
+.inline-action-btn {
+    flex: 0 0 auto;
+    width: fit-content;
+    align-self: flex-start;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: black;
@@ -469,4 +475,18 @@ main {
         margin-left: 0;
         margin-top: 0.5rem;
     }
+}
+
+
+.display-container {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.display-container h2 {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    color: var(--text-dark);
 }
