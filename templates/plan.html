@@ -25,7 +25,19 @@
         </div>
     </header>
 
-    <main class="container">
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <section class="create-trip-section">
             <h2>Overview of {{ trip['trip_name'] }}</h2>
             <div class="trips-grid">
@@ -39,11 +51,39 @@
                 <div class="trip-card">
                     <h3>Flights</h3>
                     {% if flights %}
-                        <ul>
+                        <table class="flight-table">
+                            <thead>
+                                <tr>
+                                    <th>Airline</th>
+                                    <th>Flight #</th>
+                                    <th>Departure</th>
+                                    <th>Arrival</th>
+                                    <th>Cost</th>
+                                    <th>Description</th>
+                                    <th>Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for f in flights %}
+                                <tr>
+                                    <td>{{ f['airline'] }}</td>
+                                    <td>{{ f['flight_number'] }}</td>
+                                    <td>{{ f['departure_date'] }} {{ f['departure_time'] }}</td>
+                                    <td>{{ f['arrival_date'] }} {{ f['arrival_time'] }}</td>
+                                    <td>${{ "%.2f"|format(f['cost'] or 0) }}</td>
+                                    <td>{{ f['description'] or 'No description' }}</td>
+                                    <td>
+                                        <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- <ul>
                             {% for f in flights %}
                                 <li>{{ f['departure_date'] }} {{ f['departure_time'] }} - {{ f['airline'] }} {{ f['flight_number'] }}</li>
                             {% endfor %}
-                        </ul>
+                        </ul> -->
                     {% else %}
                         <p>No flights have been entered for this trip.</p>
                     {% endif %}
@@ -68,12 +108,12 @@
             </div>
             
         </section>
-    </main>
+    </div>
 
 
     <br>
 
-    <main class="container">
+    <div class="container">
         <div class="create-trip-section">
             <h2>Activities</h2>
             {% if activities %}
@@ -107,16 +147,16 @@
                 <p>No activities have been entered for this trip.</p>
             {% endif %}
         </div>
-    </main>
+    </div>
 
 
     <br>
 
-    <main class="container">
+    <div class="container">
         <div class="form-actions">
-            <a class="btn btn-secondary" href="{{ url_for('view_trips') }}">Back to Trips</a>
+            <a class="btn btn-secondary" href="{{ url_for('view_trips') }}">Back to Viewing All Trips</a>
         </div>
-    </main>
+    </div>
 
     <footer class="footer"></footer>
 

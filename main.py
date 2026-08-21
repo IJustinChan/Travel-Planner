@@ -421,6 +421,32 @@ def get_extra_costs(trip_id):
         print(f"Error retrieving extra costs: {e}")
         return []
 
+# --- Delete Database Information ---
+def delete_flight_record(trip_id, flight_id):
+    """
+    Delete a flight from the database for a specific trip
+    :param trip_id: ID of the trip
+    :param flight_id: ID of the flight to delete
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            DELETE FROM 
+                Flights 
+            WHERE 
+                id = ? 
+            AND 
+                trip_id = ?''', (flight_id, trip_id))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting flight: {e}")
+        return False
+
+
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -561,6 +587,20 @@ def add_flight_route(trip_id):
     
     return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights)
 
+# --- Delete Routes ---
+@app.route('/delete_flight/<int:flight_id>/<int:trip_id>')
+def delete_flight(flight_id, trip_id):
+    """
+    Delete a flight from a specific trip.
+    :param flight_id: ID of the flight to delete
+    :param trip_id: ID of the trip the flight belongs to
+    """
+    if delete_flight_record(trip_id, flight_id):
+        flash('Flight deleted successfully.', 'success')
+    else:
+        flash('Error deleting flight. Please try again.', 'error')
+
+    return redirect(url_for('plan_trip', trip_id=trip_id))
 
 
 if __name__ == "__main__":
