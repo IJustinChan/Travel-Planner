@@ -641,13 +641,10 @@ def add_flight_route(trip_id):
             'description': request.form.get('description')
         }
 
-        if not all([flight_data['airline'], flight_data['flight_number'], flight_data['departure_date'], flight_data['arrival_date']]):
-            flash('Please fill in all required fields for the flight!', 'error')
+        if add_flight(flight_data):
+            flash(f"Flight '{flight_data['flight_number']}' added successfully!", 'success')
         else:
-            if add_flight(flight_data):
-                flash(f"Flight '{flight_data['flight_number']}' added successfully!", 'success')
-            else:
-                flash('Error adding flight. Please try again.', 'error')
+            flash('Error adding flight. Please try again.', 'error')
 
         return redirect(url_for('plan_trip', trip_id=trip_id))
     

@@ -52,7 +52,7 @@
             <div class="trip-card">
                 <h3>Current Flights</h3>
                 {% if flights %}
-                    <table class="flight-table">
+                    <table class="info-table">
                         <thead>
                             <tr>
                                 <th>Airline</th>
@@ -130,11 +130,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="cost">Cost ($):</label>
-                        <input type="number" id="cost" name="cost" step="0.01">
+                        <input type="number" id="cost" name="cost" step="0.01" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description:</label>
+                        <label for="description">Short Description (optional):</label>
                         <textarea id="description" name="description"></textarea>
                     </div>
                 </div>

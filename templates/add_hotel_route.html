@@ -52,11 +52,34 @@
             <div class="trip-card">
                 <h3>Current Hotels</h3>
                 {% if hotels %}
-                    <ul>
-                        {% for h in hotels %}
-                            <li>{{ h['name'] }} - {{ h['location'] }}</li>
-                        {% endfor %}
-                    </ul>
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Hotel Name</th>
+                                <th>Address</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Cost per day</th>
+                                <th>Description</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in hotels %}
+                            <tr>
+                                <td>{{ h['hotel_name'] }}</td>
+                                <td>{{ h['address'] }}</td>
+                                <td>{{ h['check_in_date'] }}</td>
+                                <td>{{ h['check_out_date'] }}</td>
+                                <td>${{ "%.2f"|format(h['cost_per_day'] or 0) }}</td>
+                                <td>{{ h['description'] or 'No description' }}</td>
+                                <td>
+                                    <a class="delete-link" href="{{ url_for('delete_hotel', hotel_id=h['id'], trip_id=trip['id']) }}">Delete</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 {% else %}
                     <p>No hotels have been entered for this trip.</p>
                 {% endif %}
@@ -105,7 +128,7 @@
                 </div>
 
                 <div class="form-group">
-                        <label for="description">Description (optional):</label>
+                        <label for="description">Short Description (optional):</label>
                         <textarea id="description" name="description"></textarea>
                     </div>
 

@@ -407,27 +407,31 @@ main {
     box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
 }
 
-.flight-table th,
-.flight-table td {
+.info-table th,
+.info-table td {
     padding: 0.8rem 0.75rem;
     text-align: left;
     vertical-align: top;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.9rem;
     color: var(--text-dark);
+    max-width: 350px;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
-.flight-table th {
+.info-table th {
     background: rgba(15, 118, 110, 0.08);
     color: var(--text-dark);
     font-weight: 700;
 }
 
-.flight-table tbody tr:hover {
+.info-table tbody tr:hover {
     background: rgba(15, 118, 110, 0.03);
 }
 
-.flight-table tbody tr:last-child td {
+.info-table tbody tr:last-child td {
     border-bottom: none;
 }
 
