@@ -25,11 +25,11 @@
         </div>
     </header>
 
-    <main class="container">
+    <div class="container">
         <div class="form-actions">
             <a class="btn btn-secondary" href="{{ url_for('plan_trip', trip_id=trip_id) }}">Return to Trip Planning</a>
         </div>
-    </main>
+    </div>
 
     <br>
 
@@ -74,7 +74,8 @@
                                 <td>${{ "%.2f"|format(f['cost'] or 0) }}</td>
                                 <td>{{ f['description'] or 'No description' }}</td>
                                 <td>
-                                    <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}">Delete</a>
+                                    <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}"
+                                    onclick="return confirm('Are you sure you want to delete this?');">Delete</a>
                                 </td>
                             </tr>
                             {% endfor %}
