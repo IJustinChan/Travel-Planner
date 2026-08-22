@@ -79,11 +79,6 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                        <!-- <ul>
-                            {% for f in flights %}
-                                <li>{{ f['departure_date'] }} {{ f['departure_time'] }} - {{ f['airline'] }} {{ f['flight_number'] }}</li>
-                            {% endfor %}
-                        </ul> -->
                     {% else %}
                         <p>No flights have been entered for this trip.</p>
                     {% endif %}
@@ -95,14 +90,40 @@
                 <div class="trip-card">
                     <h3>Accommodations</h3>
                     {% if hotels %}
-                        <ul>
-                            {% for h in hotels %}
-                                <li>{{ h['hotel_name'] }}: {{ h['check_in_date'] }} to {{ h['check_out_date'] }}</li>
-                            {% endfor %}
-                        </ul>
+                        <table class="flight-table">
+                            <thead>
+                                <tr>
+                                    <th>Hotel Name</th>
+                                    <th>Address</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Cost per day</th>
+                                    <th>Description</th>
+                                    <th>Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for h in hotels %}
+                                <tr>
+                                    <td>{{ h['hotel_name'] }}</td>
+                                    <td>{{ h['address'] }}</td>
+                                    <td>{{ h['check_in_date'] }}</td>
+                                    <td>{{ h['check_out_date'] }}</td>
+                                    <td>${{ "%.2f"|format(h['cost_per_day'] or 0) }}</td>
+                                    <td>{{ h['description'] or 'No description' }}</td>
+                                    <td>
+                                        <a class="delete-link" href="{{ url_for('delete_hotel', hotel_id=h['id'], trip_id=trip['id']) }}">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     {% else %}
                         <p>No hotels have been entered for this trip.</p>
                     {% endif %}
+                    <div class="form-actions" style="margin-top: 1rem;">
+                        <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_hotel_route', trip_id=trip['id']) }}">Add Hotel</a>
+                    </div>
                 </div>
 
             </div>

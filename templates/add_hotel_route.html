@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Hotel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>{{ trip['trip_name'] }} - Add Hotel</h1>
+            <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('plan_trip', trip_id=trip_id) }}">Return to Trip Planning</a>
+        </div>
+    </main>
+
+    <br>
+
+    <main class="container">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="display-container">
+
+            <div class="trip-card">
+                <h3>Current Hotels</h3>
+                {% if hotels %}
+                    <ul>
+                        {% for h in hotels %}
+                            <li>{{ h['name'] }} - {{ h['location'] }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No hotels have been entered for this trip.</p>
+                {% endif %}
+            </div>
+
+            <br>
+
+            <h1>Add Hotel</h1>
+            <form class="trip-form" method="POST" action="{{ url_for('add_hotel_route', trip_id=trip_id) }}">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hotel_name">Hotel Name:</label>
+                        <input type="text" id="hotel_name" name="hotel_name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" required>
+                    </div>
+
+                </div>
+               
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="check_in_date">Check-in Date:</label>
+                        <input type="date" id="check_in_date" name="check_in_date" required>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="check_out_date">Check-out Date:</label>
+                        <input type="date" id="check_out_date" name="check_out_date" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cost_per_day">Cost Per Night ($):</label>
+                        <input type="number" id="cost_per_day" name="cost_per_day" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="num_days">Number of Days:</label>
+                        <input type="number" id="num_days" name="num_days" step="1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                        <label for="description">Description (optional):</label>
+                        <textarea id="description" name="description"></textarea>
+                    </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Hotel</button>
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                </div>
+
+            </form>
+        </div>
+        
+    </main>
+
+    <footer class="footer"></footer>
+
+</body>
+</html>
+
+

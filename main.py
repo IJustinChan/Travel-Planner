@@ -90,6 +90,7 @@ def create_hotel_table():
                 location TEXT,
                 cost_per_day REAL,
                 num_days INTEGER,
+                description TEXT,
                 FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
             )
         ''')
@@ -222,8 +223,8 @@ def add_hotel(hotel_data):
         cursor = connection.cursor()
         cursor.execute('''
             INSERT INTO Hotels 
-            (trip_id, hotel_name, check_in_date, check_out_date, location, cost_per_day, num_days)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (trip_id, hotel_name, check_in_date, check_out_date, location, cost_per_day, num_days, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             hotel_data.get('trip_id'),
             hotel_data.get('hotel_name'),
@@ -231,7 +232,8 @@ def add_hotel(hotel_data):
             hotel_data.get('check_out_date'),
             hotel_data.get('location'),
             hotel_data.get('cost_per_day') or 0,
-            hotel_data.get('num_days') or 1
+            hotel_data.get('num_days') or 1,
+            hotel_data.get('description')
         ))
         connection.commit()
         connection.close()
@@ -446,6 +448,29 @@ def delete_flight_record(trip_id, flight_id):
         print(f"Error deleting flight: {e}")
         return False
 
+def delete_hotel_record(trip_id, hotel_id):
+    """
+    Delete a hotel from the database for a specific trip
+    :param trip_id: ID of the trip
+    :param hotel_id: ID of the hotel to delete
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            DELETE FROM 
+                Hotels 
+            WHERE 
+                id = ? 
+            AND 
+                trip_id = ?''', (hotel_id, trip_id))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting hotel: {e}")
+        return False
 
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
@@ -524,12 +549,53 @@ def add_activity_route(trip_id):
     """
     pass
 
-@app.route('/add_hotel/<int:trip_id>', methods=['POST'])
+@app.route('/add_hotel_route/<int:trip_id>', methods=['GET', 'POST'])
 def add_hotel_route(trip_id):
     """
     Add a new hotel to a specific trip.
     """
-    pass
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+        
+        hotels = get_hotels(trip_id)
+
+    except Exception as e:
+        print(f"Error loading trip for planning: {e}")
+        flash('Error loading add hotel page.', 'error')
+        return redirect(url_for('view_trips'))
+
+    if request.method == 'POST':
+        hotel_data = {
+            'trip_id': trip_id,
+            'hotel_name': request.form.get('hotel_name'),
+            'check_in_date': request.form.get('check_in_date'),
+            'check_out_date': request.form.get('check_out_date'),
+            'location': request.form.get('location'),
+            'cost_per_day': request.form.get('cost_per_day'),
+            'num_days': request.form.get('num_days'),
+            'description': request.form.get('description')
+        }
+
+        if not all([hotel_data['hotel_name'], hotel_data['check_in_date'], hotel_data['check_out_date']]):
+            flash('Please fill in all required fields for the hotel!', 'error')
+        else:
+            if add_hotel(hotel_data):
+                flash(f"Hotel '{hotel_data['hotel_name']}' added successfully!", 'success')
+            else:
+                flash('Error adding hotel. Please try again.', 'error')
+
+        return redirect(url_for('plan_trip', trip_id=trip_id))
+    return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels)
+    
 
 @app.route('/add_extra_cost/<int:trip_id>', methods=['POST'])
 def add_extra_cost_route(trip_id):
@@ -599,6 +665,20 @@ def delete_flight(flight_id, trip_id):
         flash('Flight deleted successfully.', 'success')
     else:
         flash('Error deleting flight. Please try again.', 'error')
+
+    return redirect(url_for('plan_trip', trip_id=trip_id))
+
+@app.route('/delete_hotel/<int:hotel_id>/<int:trip_id>')
+def delete_hotel(hotel_id, trip_id):
+    """
+    Delete a hotel from a specific trip.
+    :param hotel_id: ID of the hotel to delete
+    :param trip_id: ID of the trip the hotel belongs to
+    """
+    if delete_hotel_record(trip_id, hotel_id):
+        flash('Hotel deleted successfully.', 'success')
+    else:
+        flash('Error deleting hotel. Please try again.', 'error')
 
     return redirect(url_for('plan_trip', trip_id=trip_id))
 

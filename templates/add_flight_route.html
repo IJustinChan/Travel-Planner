@@ -52,11 +52,34 @@
             <div class="trip-card">
                 <h3>Current Flights</h3>
                 {% if flights %}
-                    <ul>
-                        {% for f in flights %}
-                            <li>{{ f['departure_date'] }} {{ f['departure_time'] }} - {{ f['airline'] }} {{ f['flight_number'] }}</li>
-                        {% endfor %}
-                    </ul>
+                    <table class="flight-table">
+                        <thead>
+                            <tr>
+                                <th>Airline</th>
+                                <th>Flight #</th>
+                                <th>Departure</th>
+                                <th>Arrival</th>
+                                <th>Cost</th>
+                                <th>Description</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in flights %}
+                            <tr>
+                                <td>{{ f['airline'] }}</td>
+                                <td>{{ f['flight_number'] }}</td>
+                                <td>{{ f['departure_date'] }} {{ f['departure_time'] }}</td>
+                                <td>{{ f['arrival_date'] }} {{ f['arrival_time'] }}</td>
+                                <td>${{ "%.2f"|format(f['cost'] or 0) }}</td>
+                                <td>{{ f['description'] or 'No description' }}</td>
+                                <td>
+                                    <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}">Delete</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 {% else %}
                     <p>No flights have been entered for this trip.</p>
                 {% endif %}
