@@ -137,9 +137,9 @@ def create_extra_costs_table():
             CREATE TABLE ExtraCosts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 trip_id INTEGER NOT NULL,
-                cost_name TEXT NOT NULL,
-                cost_amount REAL NOT NULL,
-                cost_date DATE NOT NULL,
+                name TEXT NOT NULL,
+                cost REAL NOT NULL,
+                date DATE NOT NULL,
                 description TEXT,
                 FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
             )
@@ -288,9 +288,9 @@ def add_extra_cost(extra_cost_data):
             VALUES (?, ?, ?, ?, ?)
         ''', (
             extra_cost_data.get('trip_id'),
-            extra_cost_data.get('cost_name'),
-            extra_cost_data.get('cost_amount') or 0,
-            extra_cost_data.get('cost_date'),
+            extra_cost_data.get('name'),
+            extra_cost_data.get('cost') or 0,
+            extra_cost_data.get('date'),
             extra_cost_data.get('description')
         ))
         connection.commit()
@@ -535,8 +535,18 @@ def plan_trip(trip_id):
         activities = get_activities(trip_id)
         hotels = get_hotels(trip_id)
         flights = get_flights(trip_id)
+        extra_costs = get_extra_costs(trip_id)
 
-        return render_template('plan.html', trip=trip, activities=activities, hotels=hotels, flights=flights)
+        # Calculate total costs
+        all_costs = {
+            'activities': calculate_total_event_cost(activities),
+            'hotels': calculate_hotel_total_cost(hotels),
+            'flights': calculate_total_event_cost(flights),
+            'extra_costs': calculate_total_event_cost(extra_costs),
+            'total_cost': calculate_overall_cost(trip_id)
+        }
+
+        return render_template('plan.html', trip=trip, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
         flash('Error loading trip.', 'error')
@@ -697,6 +707,52 @@ def validate_end_date(start_date_str, end_date_str):
         return end_date >= start_date
     except ValueError:
         return False
+
+def calculate_total_event_cost(event_list):
+    """
+    Calculate the total cost of a list of events (activities, flights, or extra costs).
+    :param event_list: List of events with a 'cost' key
+    :return: Total cost as a float
+    """
+    total_cost = 0.0
+    for event in event_list:
+        total_cost += event['cost']
+    return total_cost
+
+def calculate_hotel_total_cost(hotel_list):
+    """
+    Calculate the total cost of a list of hotels.
+    :param hotel_list: List of hotels with 'cost_per_day' and 'num_days' keys
+    :return: Total cost as a float
+    """
+    total_cost = 0.0
+    for hotel in hotel_list:
+        total_cost += hotel['cost_per_day'] * hotel['num_days']
+    return total_cost
+
+def calculate_overall_cost(trip_id):
+    """
+    Calculate the total cost of a trip by summing up the costs of activities, hotels, flights, and extra costs.
+    :param trip_id: ID of the trip
+    :return: Total cost as a float
+    """
+    try:
+        activities = get_activities(trip_id)
+        hotels = get_hotels(trip_id)
+        flights = get_flights(trip_id)
+        extra_costs = get_extra_costs(trip_id)
+
+        activities_cost = calculate_total_event_cost(activities)
+        hotels_cost = calculate_hotel_total_cost(hotels)
+        flights_cost = calculate_total_event_cost(flights)
+        extra_costs_cost = calculate_total_event_cost(extra_costs)
+
+        total_cost = activities_cost + hotels_cost + flights_cost + extra_costs_cost
+        return total_cost
+    
+    except Exception as e:
+        print(f"Error calculating total cost: {e}")
+        return 0.0
 
 if __name__ == "__main__":
     global database_name

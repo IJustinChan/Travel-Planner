@@ -529,8 +529,6 @@ main {
 }
 
 .budget-list li {
-    /* display: flex; */
-    /* justify-content: space-between; */
     align-items: center;
     padding: 0.7rem 0.9rem;
     border-radius: 8px;
@@ -545,5 +543,12 @@ main {
 }
 
 .budget-list li span {
-    color: var(--text-light);
+    color: black;
+}
+
+.caution-text {
+    color: var(--error-color);
+    font-weight: 1000;
+    margin-top: 1rem;
+    font-size: 110%;
 }

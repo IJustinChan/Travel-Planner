@@ -39,20 +39,24 @@
         {% endwith %}
     </div>
 
-
+    
     <div class="container">
         <div class="display-container">
             <h2>Summary of Budget for {{ trip['trip_name'] }}</h2>
             <p><strong>Budget:</strong> ${{ trip['budget'] }}</p>
-            <p><strong>Total Expense:</strong> $____ (%x of the budget)</p>
-            <p><strong>Remaining Budget:</strong> $____</p>
+            <p><strong>Total Expense:</strong> ${{ "%.2f"|format(all_costs['total_cost']) }} (%{{ "%.0f"|format(all_costs['total_cost']/trip['budget'] * 100) }} of your budget)</p>
+             {% if all_costs['total_cost'] > trip['budget'] %}
+                <p><strong class="caution-text">Warning:</strong> You have exceeded your budget by ${{ "%.2f"|format(all_costs['total_cost'] - trip['budget']) }}</p>
+            {% else %}
+                <p><strong>Remaining Budget:</strong> ${{ "%.2f"|format(trip['budget'] - all_costs['total_cost']) }}</p>
+            {% endif %}
             <div class="budget-summary">
                 <p class="budget-summary-title"><strong>Expense Breakdown:</strong></p>
                 <ul class="budget-list">
-                    <li><span>Flights: </span><strong>$____</strong></li>
-                    <li><span>Hotels: </span><strong>$____</strong></li>
-                    <li><span>Activities: </span><strong>$____</strong></li>
-                    <li><span>Other Costs: </span><strong>$____</strong></li>
+                    <li><span>Flights: </span><strong>${{ "%.2f"|format(all_costs['flights']) }}</strong></li>
+                    <li><span>Hotels: </span><strong>${{ "%.2f"|format(all_costs['hotels']) }}</strong></li>
+                    <li><span>Activities: </span><strong>${{ "%.2f"|format(all_costs['activities']) }}</strong></li>
+                    <li><span>Other Costs: </span><strong>${{ "%.2f"|format(all_costs['extra_costs']) }}</strong></li>
                 </ul>
             </div>
         </div>
