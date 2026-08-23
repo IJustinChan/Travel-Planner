@@ -422,6 +422,86 @@ def get_extra_costs(trip_id):
     except Exception as e:
         print(f"Error retrieving extra costs: {e}")
         return []
+    
+# --- Get Single Item From Database ---
+def get_item_to_edit(item_type, item_id):
+    """
+    retrieve a single item (activity, hotel, flight, or extra cost) from the database of a trip for editing
+    :param item_type: Type of the item (activity, hotel, flight, extra_cost)
+    :param item_id: ID of the item to retrieve
+    :return: The item as a dictionary or None if not found
+    """
+    if item_id is None:
+        return None
+    
+    table_names_map = {
+        "hotels": "Hotels",
+        "flights": "Flights",
+        "activities": "Activities",
+        "extra_costs": "ExtraCosts"
+    }
+
+    table_name = table_names_map.get(item_type)
+
+    if table_name is None:
+        print(f"Invalid item type: {item_type}")
+        return None
+    
+    connection = sqlite3.connect(database_name)
+    connection.row_factory = sqlite3.Row
+
+    item = connection.execute(f'''
+        SELECT 
+            * 
+        FROM 
+            {table_name} 
+        WHERE 
+            id = ?''', (item_id,)
+    ).fetchone()
+
+    connection.close()
+
+    return item
+
+# --- Update Database Information Of Single Rows ---
+def update_hotel(hotel_id, hotel_data):
+    """
+    Update a hotel in the database for a specific hotel ID
+    :param hotel_id: ID of the hotel to update
+    :param hotel_data: Dictionary containing updated hotel information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE 
+                Hotels 
+            SET 
+                hotel_name = ?, 
+                check_in_date = ?, 
+                check_out_date = ?, 
+                location = ?, 
+                cost_per_day = ?, 
+                num_days = ?, 
+                description = ? 
+            WHERE 
+                id = ?''', (
+                    hotel_data.get('hotel_name'),
+                    hotel_data.get('check_in_date'),
+                    hotel_data.get('check_out_date'),
+                    hotel_data.get('location'),
+                    hotel_data.get('cost_per_day') or 0,
+                    hotel_data.get('num_days') or 1,
+                    hotel_data.get('description'),
+                    hotel_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating hotel: {e}")
+        return False
 
 # --- Delete Database Information Of Single Rows ---
 def delete_flight_record(trip_id, flight_id):
@@ -560,7 +640,8 @@ def add_activity_route(trip_id):
     pass
 
 @app.route('/add_hotel_route/<int:trip_id>', methods=['GET', 'POST'])
-def add_hotel_route(trip_id):
+@app.route('/add_hotel_route/<int:trip_id>/<int:hotel_id>', methods=['GET', 'POST'])
+def add_hotel_route(trip_id, hotel_id=None):
     """
     Add a new hotel to a specific trip.
     """
@@ -577,6 +658,14 @@ def add_hotel_route(trip_id):
             return redirect(url_for('view_trips'))
         
         hotels = get_hotels(trip_id)
+
+        hotel_to_edit = None
+
+        if hotel_id is not None:
+            hotel_to_edit = get_item_to_edit('hotels', hotel_id)
+            if hotel_to_edit is None:
+                flash('Hotel not found for editing.', 'error')
+                return redirect(url_for('plan_trip', trip_id=trip_id))
 
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
@@ -596,6 +685,15 @@ def add_hotel_route(trip_id):
         }
 
         if validate_end_date(hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
+            hotel_data['num_days'] = number_of_days(hotel_data['check_in_date'], hotel_data['check_out_date'])
+
+            if hotel_id is not None:
+                if update_hotel(hotel_id, hotel_data):
+                    flash(f"Hotel '{hotel_data['hotel_name']}' updated successfully!", 'success')
+                else:
+                    flash('Error updating hotel. Please try again.', 'error')
+                return redirect(url_for('plan_trip', trip_id=trip_id))
+            
             if add_hotel(hotel_data):
                 flash(f"Hotel '{hotel_data['hotel_name']}' added successfully!", 'success')
             else:
@@ -605,7 +703,7 @@ def add_hotel_route(trip_id):
             flash('Check-out date cannot be before check-in date.', 'error')
             return redirect(url_for('add_hotel_route', trip_id=trip_id))
         
-    return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels)
+    return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels, hotel_to_edit=hotel_to_edit)
     
 
 @app.route('/add_extra_cost/<int:trip_id>', methods=['POST'])
@@ -753,6 +851,22 @@ def calculate_overall_cost(trip_id):
     except Exception as e:
         print(f"Error calculating total cost: {e}")
         return 0.0
+    
+def number_of_days(start_date_str, end_date_str):
+    """
+    Calculate the number of days between two dates.
+    :param start_date_str: Start date as a string
+    :param end_date_str: End date as a string
+    :return: Number of days as an integer
+    """
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        delta = end_date - start_date
+        return delta.days
+    except ValueError:
+        return 0
+
 
 if __name__ == "__main__":
     global database_name

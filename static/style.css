@@ -552,3 +552,8 @@ main {
     margin-top: 1rem;
     font-size: 110%;
 }
+
+.edit-link {
+    color: var(--accent-color);
+    font-weight: 600;
+}
