@@ -24,7 +24,11 @@
         </div>
     </header>
 
-    <main class="container">
+    <div class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('view_trips') }}">View All Trips</a>
+        </div>
+
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -36,6 +40,11 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
+
+    <br>
+
+    <main class="container">
 
         <div class="content-wrapper">
             <!-- Create Trip Section -->
@@ -137,7 +146,7 @@
 
                     <div class="form-group">
                         <label for="travel-mode">Mode of Travel</label>
-                        <select id="travel-mode" name="travel_mode">
+                        <select id="travel-mode" name="travel_mode" required>
                             <option value="">Select a mode</option>
                             <option value="Flight">Flight (Airplane)</option>
                             <option value="Road Trip">Road Trip</option>
@@ -146,7 +155,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="companions">Travel Companions (comma-separated)</label>
+                        <label for="companions">Travel Companions (comma-separated) - Optional Field</label>
                         <input 
                             type="text" 
                             id="companions" 

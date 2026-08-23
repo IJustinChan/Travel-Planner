@@ -493,15 +493,15 @@ def home():
             'companions': request.form.get('companions')
         }
 
-        if not all([trip_data['trip_name'], trip_data['destination'], 
-                    trip_data['start_date'], trip_data['end_date']]):
-            flash('Please fill in all required fields!', 'error')
-        else:
+        if validate_end_date(trip_data['start_date'], trip_data['end_date']) is True:
             if add_trip(trip_data):
                 flash(f"Trip '{trip_data['trip_name']}' created successfully!", 'success')
                 return redirect(url_for('view_trips'))
             else:
                 flash('Error creating trip. Please try again.', 'error')
+        else:
+            flash('End date cannot be before start date.', 'error')
+        return redirect(url_for('home'))
 
     return render_template("home.html")
 
@@ -585,15 +585,16 @@ def add_hotel_route(trip_id):
             'description': request.form.get('description')
         }
 
-        if not all([hotel_data['hotel_name'], hotel_data['check_in_date'], hotel_data['check_out_date']]):
-            flash('Please fill in all required fields for the hotel!', 'error')
-        else:
+        if validate_end_date(hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
             if add_hotel(hotel_data):
                 flash(f"Hotel '{hotel_data['hotel_name']}' added successfully!", 'success')
             else:
                 flash('Error adding hotel. Please try again.', 'error')
-
-        return redirect(url_for('plan_trip', trip_id=trip_id))
+            return redirect(url_for('plan_trip', trip_id=trip_id))
+        else:
+            flash('Check-out date cannot be before check-in date.', 'error')
+            return redirect(url_for('add_hotel_route', trip_id=trip_id))
+        
     return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels)
     
 
@@ -641,12 +642,15 @@ def add_flight_route(trip_id):
             'description': request.form.get('description')
         }
 
-        if add_flight(flight_data):
-            flash(f"Flight '{flight_data['flight_number']}' added successfully!", 'success')
+        if validate_end_date(flight_data['departure_date'], flight_data['arrival_date']) is True:
+            if add_flight(flight_data):
+                flash(f"Flight '{flight_data['flight_number']}' added successfully!", 'success')
+            else:
+                flash('Error adding flight. Please try again.', 'error')
+            return redirect(url_for('plan_trip', trip_id=trip_id))
         else:
-            flash('Error adding flight. Please try again.', 'error')
-
-        return redirect(url_for('plan_trip', trip_id=trip_id))
+            flash('Arrival date cannot be before departure date.', 'error')
+            return redirect(url_for('add_flight_route', trip_id=trip_id))
     
     return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights)
 
@@ -679,6 +683,20 @@ def delete_hotel(hotel_id, trip_id):
 
     return redirect(url_for('plan_trip', trip_id=trip_id))
 
+# --- Methods ---
+def validate_end_date(start_date_str, end_date_str):
+    """
+    Validate that the end date is not before the start date.
+    :param start_date_str: Start date as a string
+    :param end_date_str: End date as a string
+    :return: Boolean indicating if the end date is valid
+    """
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        return end_date >= start_date
+    except ValueError:
+        return False
 
 if __name__ == "__main__":
     global database_name
