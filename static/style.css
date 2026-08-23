@@ -174,20 +174,6 @@ main {
     gap: 3rem;
 }
 
-/* ===== Create Trip Section ===== */
-.create-trip-section {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-}
-
-.create-trip-section h2 {
-    font-size: 1.75rem;
-    margin-bottom: 2rem;
-    color: var(--text-dark);
-}
-
 /* ===== Form Styles ===== */
 .trip-form {
     display: flex;
@@ -298,19 +284,6 @@ main {
 }
 
 /* ===== Recent Trips Section ===== */
-.recent-trips-section {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-}
-
-.recent-trips-section h2 {
-    font-size: 1.75rem;
-    margin-bottom: 2rem;
-    color: var(--text-dark);
-}
-
 .trips-grid {
     display: grid;
     gap: 1.5rem;
@@ -472,8 +445,7 @@ main {
         gap: 1rem;
     }
 
-    .create-trip-section,
-    .recent-trips-section {
+    .display-container {
         padding: 1.5rem;
     }
 
@@ -531,4 +503,47 @@ main {
 
 .delete-link {
     color: red;
+}
+
+.budget-summary {
+    margin-top: 1rem;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+}
+
+.budget-summary-title {
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.budget-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.budget-list li {
+    /* display: flex; */
+    /* justify-content: space-between; */
+    align-items: center;
+    padding: 0.7rem 0.9rem;
+    border-radius: 8px;
+    background: white;
+    border-left: 4px solid var(--primary-color);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    font-size: 0.95rem;
+}
+
+.budget-list li strong {
+    color: var(--text-dark);
+}
+
+.budget-list li span {
+    color: var(--text-light);
 }

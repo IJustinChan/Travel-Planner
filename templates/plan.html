@@ -37,8 +37,31 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
 
-        <section class="create-trip-section">
+
+    <div class="container">
+        <div class="display-container">
+            <h2>Summary of Budget for {{ trip['trip_name'] }}</h2>
+            <p><strong>Budget:</strong> ${{ trip['budget'] }}</p>
+            <p><strong>Total Expense:</strong> $____ (%x of the budget)</p>
+            <p><strong>Remaining Budget:</strong> $____</p>
+            <div class="budget-summary">
+                <p class="budget-summary-title"><strong>Expense Breakdown:</strong></p>
+                <ul class="budget-list">
+                    <li><span>Flights: </span><strong>$____</strong></li>
+                    <li><span>Hotels: </span><strong>$____</strong></li>
+                    <li><span>Activities: </span><strong>$____</strong></li>
+                    <li><span>Other Costs: </span><strong>$____</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="container">
+        <section class="display-container">
             <h2>Overview of {{ trip['trip_name'] }}</h2>
             <div class="trips-grid">
                 <div class="trip-card">
@@ -137,7 +160,7 @@
     <br>
 
     <div class="container">
-        <div class="create-trip-section">
+        <div class="display-container">
             <h2>Activities</h2>
             {% if activities %}
                 <!-- <table>

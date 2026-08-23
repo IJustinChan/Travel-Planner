@@ -423,7 +423,7 @@ def get_extra_costs(trip_id):
         print(f"Error retrieving extra costs: {e}")
         return []
 
-# --- Delete Database Information ---
+# --- Delete Database Information Of Single Rows ---
 def delete_flight_record(trip_id, flight_id):
     """
     Delete a flight from the database for a specific trip
