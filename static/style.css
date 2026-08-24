@@ -557,3 +557,8 @@ main {
     color: var(--accent-color);
     font-weight: 600;
 }
+
+.edit-button {
+    background: wheat;
+    color: black;
+}

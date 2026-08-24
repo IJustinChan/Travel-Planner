@@ -22,6 +22,8 @@
             <h1>{{ trip['trip_name'] }}</h1>
             <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
             <p>Plan all your trip details here. Make your travel fun and memorable!</p>
+            <br>
+            <a class="btn edit-button" href="{{ url_for('home', trip_id=trip['id']) }}">Edit Trip Information</a>
         </div>
     </header>
 

@@ -424,6 +424,31 @@ def get_extra_costs(trip_id):
         return []
     
 # --- Get Single Item From Database ---
+def get_single_trip(trip_id):
+    """
+    Retrieve a single trip from the database for editing
+    :param trip_id: ID of the trip to retrieve
+    :return: The trip as a dictionary or None if not found
+    """
+    if trip_id is None:
+        return None
+    
+    connection = sqlite3.connect(database_name)
+    connection.row_factory = sqlite3.Row
+
+    trip = connection.execute('''
+        SELECT 
+            * 
+        FROM 
+            TripInfo 
+        WHERE 
+            id = ?''', (trip_id,)
+    ).fetchone()
+
+    connection.close()
+
+    return trip
+
 def get_item_to_edit(item_type, item_id):
     """
     retrieve a single item (activity, hotel, flight, or extra cost) from the database of a trip for editing
@@ -464,6 +489,51 @@ def get_item_to_edit(item_type, item_id):
     return item
 
 # --- Update Database Information Of Single Rows ---
+def update_trip(trip_id, trip_data):
+    """
+    Update a trip in the database for a specific trip ID
+    :param trip_id: ID of the trip to update
+    :param trip_data: Dictionary containing updated trip information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE 
+                TripInfo 
+            SET 
+                trip_name = ?, 
+                destination = ?, 
+                country = ?, 
+                start_date = ?, 
+                end_date = ?, 
+                budget = ?, 
+                num_travelers = ?, 
+                description = ?, 
+                travel_mode = ?, 
+                companions = ? 
+            WHERE 
+                id = ?''', (
+                    trip_data.get('trip_name'),
+                    trip_data.get('destination'),
+                    trip_data.get('country'),
+                    trip_data.get('start_date'),
+                    trip_data.get('end_date'),
+                    trip_data.get('budget') or 0,
+                    trip_data.get('num_travelers') or 1,
+                    trip_data.get('description'),
+                    trip_data.get('travel_mode'),
+                    trip_data.get('companions'),
+                    trip_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating trip: {e}")
+        return False
+
 def update_flight(flight_id, flight_data):
     """
     Update a flight in the database for a specific flight ID
@@ -595,10 +665,20 @@ def delete_hotel_record(trip_id, hotel_id):
 
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
-def home():
+@app.route("/<int:trip_id>", methods=['GET', 'POST'])
+def home(trip_id=None):
     """
     Add a new trip.
     """
+
+    trip_to_edit = None
+
+    if trip_id is not None:
+        trip_to_edit = get_single_trip(trip_id)
+        if trip_to_edit is None:
+            flash('Trip not found for editing.', 'error')
+            return redirect(url_for('home'))
+
     if request.method == 'POST':
         # Extract form data
         trip_data = {
@@ -615,6 +695,13 @@ def home():
         }
 
         if validate_end_date(trip_data['start_date'], trip_data['end_date']) is True:
+            if trip_id is not None:
+                if update_trip(trip_id, trip_data):
+                    flash(f"Trip '{trip_data['trip_name']}' updated successfully!", 'success')
+                else:
+                    flash('Error updating trip. Please try again.', 'error')
+                return redirect(url_for('view_trips'))
+
             if add_trip(trip_data):
                 flash(f"Trip '{trip_data['trip_name']}' created successfully!", 'success')
                 return redirect(url_for('view_trips'))
@@ -624,7 +711,7 @@ def home():
             flash('End date cannot be before start date.', 'error')
         return redirect(url_for('home'))
 
-    return render_template("home.html")
+    return render_template("home.html", trip_to_edit=trip_to_edit)
 
 @app.route("/trips")
 def view_trips():
