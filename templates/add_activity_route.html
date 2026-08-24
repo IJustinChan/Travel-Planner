@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Activity</title>
+    <title>{{ 'Edit' if activity_to_edit else 'Add' }} Activity</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -75,75 +75,75 @@
                 {% endif %}
 
             </div>
+
+            <h1>{{ 'Edit ' if activity_to_edit else 'Add ' }} Activity</h1>
+
+            {% if activity_to_edit %}
+                <form method="POST"
+                    action="{{ url_for('add_activity_route',
+                                        trip_id=trip_id,
+                                        activity_id=activity_to_edit['id']) }}">
+            {% else %}
+                <form method="POST"
+                    action="{{ url_for('add_activity_route',
+                                        trip_id=trip_id) }}">
+            {% endif %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="activity_name">Activity Name:</label>
+                        <input type="text" id="activity_name" name="activity_name"
+                        value="{{ activity_to_edit['activity_name'] if activity_to_edit else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activity_type">Activity Type:</label>
+                        <input type="text" id="activity_type" name="activity_type"
+                        value="{{ activity_to_edit['activity_type'] if activity_to_edit else '' }}" required>
+                    </div>
+
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="activity_date">Activity Date:</label>
+                        <input type="date" id="activity_date" name="activity_date" value="{{ activity_to_edit['activity_date'] if activity_to_edit else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activity_time">Activity Time:</label>
+                        <input type="time" id="activity_time" name="activity_time" value="{{ activity_to_edit['activity_time'] if flight_to_edit else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" value="{{ activity_to_edit['location'] if activity_to_edit else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cost">Cost ($):</label>
+                        <input type="number" id="cost" name="cost" step="0.01"
+                        value="{{ activity_to_edit['cost'] if activity_to_edit else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Short Description (optional):</label>
+                    <textarea id="description" name="description">{{ activity_to_edit['description'] if activity_to_edit else '' }}</textarea>
+                </div>
+
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{{ "Update Activity" if activity_to_edit else "Add Activity" }}</button>
+                    {% if activity_to_edit is none %}
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    {% endif %}
+                </div>
+
+            </form>
         </div>
-
-        <h1>{{ 'Edit ' if activity_to_edit else 'Add ' }} Activity</h1>
-
-        {% if activity_to_edit %}
-            <form method="POST"
-                action="{{ url_for('add_activity_route',
-                                    trip_id=trip_id,
-                                    activity_id=activity_to_edit['id']) }}">
-        {% else %}
-            <form method="POST"
-                action="{{ url_for('add_activity_route',
-                                    trip_id=trip_id) }}">
-        {% endif %}
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="activity_name">Activity Name:</label>
-                    <input type="text" id="activity_name" name="activity_name"
-                    value="{{ activity_to_edit['activity_name'] if activity_to_edit else '' }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="activity_type">Activity Type:</label>
-                    <input type="text" id="activity_type" name="activity_type"
-                    value="{{ activity_to_edit['activity_type'] if activity_to_edit else '' }}" required>
-                </div>
-
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="activity_date">Activity Date:</label>
-                    <input type="date" id="activity_date" name="activity_date" value="{{ activity_to_edit['activity_date'] if activity_to_edit else '' }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="activity_time">Activity Time:</label>
-                    <input type="time" id="activity_time" name="activity_time" value="{{ activity_to_edit['activity_time'] if flight_to_edit else '' }}" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="location">Location:</label>
-                    <input type="text" id="location" name="location" value="{{ activity_to_edit['location'] if activity_to_edit else '' }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cost">Cost ($):</label>
-                    <input type="number" id="cost" name="cost" step="0.01"
-                    value="{{ activity_to_edit['cost'] if activity_to_edit else '' }}" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Short Description (optional):</label>
-                <textarea id="description" name="description">{{ activity_to_edit['description'] if activity_to_edit else '' }}</textarea>
-            </div>
-
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">{{ "Update Activity" if activity_to_edit else "Add Activity" }}</button>
-                {% if activity_to_edit is none %}
-                    <button type="reset" class="btn btn-secondary">Clear</button>
-                {% endif %}
-            </div>
-
-        </form>
 
     </main>
 

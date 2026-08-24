@@ -182,6 +182,7 @@
 
             <div class="trip-card">
                 <h3>Planned Activities</h3>
+                <p>Here is where you can plan out activities to do on your trip such as places to visit, restaurants to eat at, events to take part in, and more!</p>
                 {% if activities %}
                     <table class="info-table">
                         <thead>
@@ -224,6 +225,48 @@
         </div>
     </div>
 
+    <br>
+
+    <div class="container">
+        <div class="display-container">
+            <h2>Extra Costs</h2>
+
+            <div class="trip-card">
+                <p>Add some extra costs that occurred during your trip such as groceries, transportation, shopping, and more.</p>
+
+                {% if extra_costs %}
+                    <table class="info-table">
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Cost</th>
+                            <th>Notes</th>
+                            <th>Edit</th>
+                            <th>Remove</th>
+                        </tr>
+                        {% for extra_cost in extra_costs %}
+                        <tr>
+                            <td>{{ extra_cost['name'] }}</td>
+                            <td>{{ extra_cost['date'] }}</td>
+                            <td>${{ "%.2f"|format(extra_cost['cost']) }}</td>
+                            <td>{{ extra_cost['description'] }}</td>
+                            <td><a class="edit-link" href="{{ url_for('add_extra_cost_route', trip_id=trip_id, extra_cost_id=extra_cost['id']) }}">Edit</a></td>
+                            <td><a class="delete-link" href="{{ url_for('delete_extra_cost', extra_cost_id=extra_cost['id'], trip_id=trip_id) }}" onclick="return confirm('Are you sure you want to delete this extra cost?')">Remove</a></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+                {% else %}
+                    <p>No extra costs have been entered for this trip.</p>
+                {% endif %}
+            </div>
+
+            <div class="form-actions" style="margin-top: 1rem;">
+                <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_extra_cost_route', trip_id=trip['id']) }}">Add Extra Cost</a>
+            </div>
+
+        </div>
+    </div>
 
     <br>
 

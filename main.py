@@ -284,7 +284,7 @@ def add_extra_cost(extra_cost_data):
         cursor = connection.cursor()
         cursor.execute('''
             INSERT INTO ExtraCosts 
-            (trip_id, cost_name, cost_amount, cost_date, description)
+            (trip_id, name, cost, date, description)
             VALUES (?, ?, ?, ?, ?)
         ''', (
             extra_cost_data.get('trip_id'),
@@ -416,7 +416,7 @@ def get_extra_costs(trip_id):
             WHERE 
                 trip_id = ? 
             ORDER BY 
-                cost_date ASC''', (trip_id,)).fetchall()
+                date ASC''', (trip_id,)).fetchall()
         connection.close()
         return extra_costs
     except Exception as e:
@@ -653,6 +653,39 @@ def update_activity(activity_id, activity_data):
         print(f"Error updating activity: {e}")
         return False
 
+def update_extra_cost(extra_cost_id, extra_cost_data):
+    """
+    Updates an extra cost in the database for a specific extra cost ID
+    :param extra_cost_id: ID of the extra cost to update
+    :param extra_cost_data: Dictionary containing updated extra cost information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE
+                ExtraCosts
+            SET
+                name = ?,
+                cost = ?,
+                date = ?,
+                description = ?
+            WHERE
+                id = ?''', (
+                    extra_cost_data.get('name'),
+                    extra_cost_data.get('cost') or 0,
+                    extra_cost_data.get('date'),
+                    extra_cost_data.get('description'),
+                    extra_cost_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating extra cost: {e}")
+        return False
+
 # --- Delete Database Information Of Single Rows ---
 def delete_flight_record(trip_id, flight_id):
     """
@@ -724,6 +757,30 @@ def delete_activity_record(trip_id, activity_id):
         return True
     except Exception as e:
         print(f"Error deleting activity: {e}")
+        return False
+
+def delete_extra_cost_record(trip_id, extra_cost_id):
+    """
+    Delete an extra_cost from the database for a specific trip
+    :param trip_id: ID of the trip
+    :param extra_cost_id: ID of the extra cost to delete
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            DELETE FROM 
+                ExtraCosts 
+            WHERE 
+                id = ? 
+            AND 
+                trip_id = ?''', (extra_cost_id, trip_id))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting extra cost: {e}")
         return False
 
 # --- Delete Entire Trip and Associated Records ---
@@ -844,7 +901,7 @@ def plan_trip(trip_id):
             'total_cost': calculate_overall_cost(trip_id)
         }
 
-        return render_template('plan.html', trip=trip, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
+        return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
         flash('Error loading trip.', 'error')
@@ -976,13 +1033,62 @@ def add_hotel_route(trip_id, hotel_id=None):
         
     return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels, hotel_to_edit=hotel_to_edit)
     
-
-@app.route('/add_extra_cost/<int:trip_id>', methods=['POST'])
-def add_extra_cost_route(trip_id):
+@app.route('/add_extra_cost_route/<int:trip_id>', methods=['GET', 'POST'])
+@app.route('/add_extra_cost_route/<int:trip_id>/<int:extra_cost_id>', methods=['GET', 'POST'])
+def add_extra_cost_route(trip_id, extra_cost_id=None):
     """
     Add a new extra cost to a specific trip.
     """
-    pass
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+        
+        extra_costs = get_extra_costs(trip_id)
+
+        extra_cost_to_edit = None
+
+        if extra_cost_id is not None:
+            extra_cost_to_edit = get_item_to_edit('extra_costs', extra_cost_id)
+            if extra_cost_to_edit is None:
+                flash('Extra cost not found for editing.', 'error')
+                return redirect(url_for('plan_trip', trip_id=trip_id))
+
+    except Exception as e:
+        print(f"Error loading trip for planning: {e}")
+        flash('Error loading add extra cost page.', 'error')
+        return redirect(url_for('view_trips'))
+    
+    if request.method == 'POST':
+        extra_cost_data = {
+            'trip_id': trip_id,
+            'name': request.form.get('name'),
+            'cost': request.form.get('cost'),
+            'date': request.form.get('date'),
+            'description': request.form.get('description')
+        }
+
+        if extra_cost_id is not None:
+            if update_extra_cost(extra_cost_id, extra_cost_data):
+                flash(f"Extra cost '{extra_cost_data['name']}' updated successfully!", 'success')
+            else:
+                flash('Error updating extra cost. Please try again.', 'error')
+            return redirect(url_for('plan_trip', trip_id=trip_id))
+        
+        if add_extra_cost(extra_cost_data):
+            flash(f"Extra cost '{extra_cost_data['name']}' added successfully!", 'success')
+        else:
+            flash('Error adding extra cost. Please try again.', 'error')
+        return redirect(url_for('plan_trip', trip_id=trip_id))
+
+    return render_template('add_extra_cost_route.html', trip_id=trip_id, trip=trip, extra_costs=extra_costs, extra_cost_to_edit=extra_cost_to_edit)
 
 @app.route('/add_flight_route/<int:trip_id>', methods=['GET', 'POST'])
 @app.route('/add_flight_route/<int:trip_id>/<int:flight_id>', methods=['GET', 'POST'])
@@ -1102,6 +1208,20 @@ def delete_activity(activity_id, trip_id):
         flash('Activity deleted successfully.', 'success')
     else:
         flash('Error deleting activity. Please try again.', 'error')
+
+    return redirect(url_for('plan_trip', trip_id=trip_id))
+
+@app.route('/delete_extra_cost/<int:extra_cost_id>/<int:trip_id>')
+def delete_extra_cost(extra_cost_id, trip_id):
+    """
+    Delete an extra cost from a specific trip.
+    :param extra_cost_id: ID of the extra cost to delete
+    :param trip_id: ID of the trip the extra cost belongs to
+    """
+    if delete_extra_cost_record(trip_id, extra_cost_id):
+        flash('Extra cost deleted successfully.', 'success')
+    else:
+        flash('Error deleting extra cost. Please try again.', 'error')
 
     return redirect(url_for('plan_trip', trip_id=trip_id))
 
