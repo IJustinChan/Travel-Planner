@@ -702,6 +702,30 @@ def delete_hotel_record(trip_id, hotel_id):
         print(f"Error deleting hotel: {e}")
         return False
 
+def delete_activity_record(trip_id, activity_id):
+    """
+    Delete an activity from the database for a specific trip
+    :param trip_id: ID of the trip
+    :param activity_id: ID of the activity to delete
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            DELETE FROM 
+                Activities 
+            WHERE 
+                id = ? 
+            AND 
+                trip_id = ?''', (activity_id, trip_id))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting activity: {e}")
+        return False
+
 # --- Delete Entire Trip and Associated Records ---
 def delete_trip_and_associated_records(trip_id):
     """
@@ -1026,6 +1050,19 @@ def add_flight_route(trip_id, flight_id=None):
     return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights, flight_to_edit=flight_to_edit)
 
 # --- Delete Routes ---
+@app.route('/delete_trip/<int:trip_id>')
+def delete_trip(trip_id):
+    """
+    Delete a trip and all associated records.
+    :param trip_id: ID of the trip to delete
+    """
+    if delete_trip_and_associated_records(trip_id):
+        flash('Trip and all associated records deleted successfully.', 'success')
+    else:
+        flash('Error deleting trip. Please try again.', 'error')
+
+    return redirect(url_for('view_trips'))
+
 @app.route('/delete_flight/<int:flight_id>/<int:trip_id>')
 def delete_flight(flight_id, trip_id):
     """
@@ -1054,18 +1091,19 @@ def delete_hotel(hotel_id, trip_id):
 
     return redirect(url_for('plan_trip', trip_id=trip_id))
 
-@app.route('/delete_trip/<int:trip_id>')
-def delete_trip(trip_id):
+@app.route('/delete_activity/<int:activity_id>/<int:trip_id>')
+def delete_activity(activity_id, trip_id):
     """
-    Delete a trip and all associated records.
-    :param trip_id: ID of the trip to delete
+    Delete an activity from a specific trip.
+    :param activity_id: ID of the activity to delete
+    :param trip_id: ID of the trip the activity belongs to
     """
-    if delete_trip_and_associated_records(trip_id):
-        flash('Trip and all associated records deleted successfully.', 'success')
+    if delete_activity_record(trip_id, activity_id):
+        flash('Activity deleted successfully.', 'success')
     else:
-        flash('Error deleting trip. Please try again.', 'error')
+        flash('Error deleting activity. Please try again.', 'error')
 
-    return redirect(url_for('view_trips'))
+    return redirect(url_for('plan_trip', trip_id=trip_id))
 
 # --- Methods ---
 def validate_end_date(start_date_str, end_date_str):

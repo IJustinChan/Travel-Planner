@@ -179,36 +179,48 @@
     <div class="container">
         <div class="display-container">
             <h2>Activities</h2>
-            {% if activities %}
-                <!-- <table>
-                    <tr>
-                        <th>Date</th>
-                        <th>Activity</th>
-                        <th>Type</th>
-                        <th>Edit Activity</th>
-                        <th>Notes</th>
-                        <th>Remove Activity</th>
-                    </tr>
-                    {% for act in activities %}
-                    <tr>
-                        <td>{{ act['activity_date'] }}</td>
-                        <td>{{ act['activity_name'] }}</td>
-                        <td>{{ act['activity_type'] }}</td>
-                        <td><a href="{{ url_for('edit_activity', activity_id=act['id']) }}" class="btn btn-primary">Edit</a></td>
-                        <td>{{ act['notes'] }}</td>
-                        <td><a href="{{ url_for('remove_activity', activity_id=act['id']) }}" class="btn btn-danger">Remove</a></td>
-                    </tr>
-                    {% endfor %}
-                </table> -->
 
-                <ul>
-                    {% for act in activities %}
-                        <li>{{ act['activity_date'] }} - {{ act['activity_name'] }} ({{ act['activity_type'] }})</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No activities have been entered for this trip.</p>
-            {% endif %}
+            <div class="trip-card">
+                <h3>Planned Activities</h3>
+                {% if activities %}
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Activity</th>
+                                <th>Type</th>
+                                <th>Time</th>
+                                <th>Location</th>
+                                <th>Cost</th>
+                                <th>Notes</th>
+                                <th>Edit</th>
+                                <th>Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for act in activities %}
+                            <tr>
+                                <td>{{ act['activity_date'] }}</td>
+                                <td>{{ act['activity_name'] }}</td>
+                                <td>{{ act['activity_type'] }}</td>
+                                <td>{{ act['activity_time'] }}</td>
+                                <td>{{ act['location'] }}</td>
+                                <td>${{ "%.2f"|format(act['cost']) }}</td>
+                                <td>{{ act['description'] }}</td>
+                                <td><a class="edit-link" href="{{ url_for('add_activity_route', trip_id=trip['id'], activity_id=act['id']) }}">Edit</a></td>
+                                <td><a class="delete-link" href="{{ url_for('delete_activity', activity_id=act['id'], trip_id=trip['id']) }}" onclick="return confirm('Are you sure you want to delete this activity?')">Remove</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No activities have been entered for this trip.</p>
+                {% endif %}
+            </div>
+
+            <div class="form-actions" style="margin-top: 1rem;">
+                <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_activity_route', trip_id=trip['id']) }}">Add Activity</a>
+            </div>
         </div>
     </div>
 

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Activity</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>{{ trip['trip_name'] }} - {{ 'Edit' if activity_to_edit else 'Add' }} Activity</h1>
+            <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="display-container">
+            <div class="trip-card">
+                <h3>Current Activities</h3>
+
+                {% if activities %}
+                    <table class="info-table">
+                        <tr>
+                            <th>Date</th>
+                            <th>Activity</th>
+                            <th>Type</th>
+                            <th>Time</th>
+                            <th>Location</th>
+                            <th>Cost</th>
+                            <th>Notes</th>
+                            <th>Edit</th>
+                            <th>Remove</th>
+                        </tr>
+                        {% for act in activities %}
+                        <tr>
+                            <td>{{ act['activity_date'] }}</td>
+                            <td>{{ act['activity_name'] }}</td>
+                            <td>{{ act['activity_type'] }}</td>
+                            <td>{{ act['activity_time'] }}</td>
+                            <td>{{ act['location'] }}</td>
+                            <td>${{ "%.2f"|format(act['cost']) }}</td>
+                            <td>{{ act['description'] }}</td>
+                            <td><a class="edit-link" href="{{ url_for('add_activity_route', trip_id=trip_id, activity_id=act['id']) }}">Edit</a></td>
+                            <td><a class="delete-link" href="{{ url_for('delete_activity', activity_id=act['id'], trip_id=trip_id) }}" onclick="return confirm('Are you sure you want to delete this activity?')">Remove</a></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+                {% else %}
+                    <p>No activities have been entered for this trip.</p>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <h1>{{ 'Edit ' if activity_to_edit else 'Add ' }} Activity</h1>
+
+        {% if activity_to_edit %}
+            <form method="POST"
+                action="{{ url_for('add_activity_route',
+                                    trip_id=trip_id,
+                                    activity_id=activity_to_edit['id']) }}">
+        {% else %}
+            <form method="POST"
+                action="{{ url_for('add_activity_route',
+                                    trip_id=trip_id) }}">
+        {% endif %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="activity_name">Activity Name:</label>
+                    <input type="text" id="activity_name" name="activity_name"
+                    value="{{ activity_to_edit['activity_name'] if activity_to_edit else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="activity_type">Activity Type:</label>
+                    <input type="text" id="activity_type" name="activity_type"
+                    value="{{ activity_to_edit['activity_type'] if activity_to_edit else '' }}" required>
+                </div>
+
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="activity_date">Activity Date:</label>
+                    <input type="date" id="activity_date" name="activity_date" value="{{ activity_to_edit['activity_date'] if activity_to_edit else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="activity_time">Activity Time:</label>
+                    <input type="time" id="activity_time" name="activity_time" value="{{ activity_to_edit['activity_time'] if flight_to_edit else '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location" value="{{ activity_to_edit['location'] if activity_to_edit else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cost">Cost ($):</label>
+                    <input type="number" id="cost" name="cost" step="0.01"
+                    value="{{ activity_to_edit['cost'] if activity_to_edit else '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Short Description (optional):</label>
+                <textarea id="description" name="description">{{ activity_to_edit['description'] if activity_to_edit else '' }}</textarea>
+            </div>
+
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{ "Update Activity" if activity_to_edit else "Add Activity" }}</button>
+                {% if activity_to_edit is none %}
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                {% endif %}
+            </div>
+
+        </form>
+
+    </main>
+
+    <footer class="footer"></footer>
+
+</body>
