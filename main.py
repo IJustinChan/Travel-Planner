@@ -663,6 +663,33 @@ def delete_hotel_record(trip_id, hotel_id):
         print(f"Error deleting hotel: {e}")
         return False
 
+# --- Delete Entire Trip and Associated Records ---
+def delete_trip_and_associated_records(trip_id):
+    """
+    Delete a trip and all associated records (flights, hotels, activities, extra costs).
+    :param trip_id: ID of the trip to delete
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+
+        # Delete associated records
+        cursor.execute('DELETE FROM Flights WHERE trip_id = ?', (trip_id,))
+        cursor.execute('DELETE FROM Hotels WHERE trip_id = ?', (trip_id,))
+        cursor.execute('DELETE FROM Activities WHERE trip_id = ?', (trip_id,))
+        cursor.execute('DELETE FROM ExtraCosts WHERE trip_id = ?', (trip_id,))
+
+        # Delete the trip itself
+        cursor.execute('DELETE FROM TripInfo WHERE id = ?', (trip_id,))
+
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting trip and associated records: {e}")
+        return False
+
 # --- Webpages ---
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/<int:trip_id>", methods=['GET', 'POST'])
@@ -934,6 +961,19 @@ def delete_hotel(hotel_id, trip_id):
         flash('Error deleting hotel. Please try again.', 'error')
 
     return redirect(url_for('plan_trip', trip_id=trip_id))
+
+@app.route('/delete_trip/<int:trip_id>')
+def delete_trip(trip_id):
+    """
+    Delete a trip and all associated records.
+    :param trip_id: ID of the trip to delete
+    """
+    if delete_trip_and_associated_records(trip_id):
+        flash('Trip and all associated records deleted successfully.', 'success')
+    else:
+        flash('Error deleting trip. Please try again.', 'error')
+
+    return redirect(url_for('view_trips'))
 
 # --- Methods ---
 def validate_end_date(start_date_str, end_date_str):
