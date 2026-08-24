@@ -87,6 +87,7 @@
                                     <th>Arrival</th>
                                     <th>Cost</th>
                                     <th>Description</th>
+                                    <th>Edit</th>
                                     <th>Delete</th>
                                 </tr>
                             </thead>
@@ -99,6 +100,9 @@
                                     <td>{{ f['arrival_date'] }} {{ f['arrival_time'] }}</td>
                                     <td>${{ "%.2f"|format(f['cost'] or 0) }}</td>
                                     <td>{{ f['description'] or 'No description' }}</td>
+                                    <td>
+                                        <a class="edit-link" href="{{ url_for('add_flight_route', trip_id=trip['id'], flight_id=f['id']) }}">Edit</a>
+                                    </td>
                                     <td>
                                         <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}"
                                         onclick="return confirm('Are you sure you want to delete this?');">Delete</a>

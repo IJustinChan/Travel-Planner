@@ -464,6 +464,47 @@ def get_item_to_edit(item_type, item_id):
     return item
 
 # --- Update Database Information Of Single Rows ---
+def update_flight(flight_id, flight_data):
+    """
+    Update a flight in the database for a specific flight ID
+    :param flight_id: ID of the flight to update
+    :param flight_data: Dictionary containing updated flight information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE 
+                Flights 
+            SET 
+                airline = ?, 
+                flight_number = ?, 
+                departure_date = ?, 
+                departure_time = ?, 
+                arrival_date = ?, 
+                arrival_time = ?, 
+                cost = ?, 
+                description = ? 
+            WHERE 
+                id = ?''', (
+                    flight_data.get('airline'),
+                    flight_data.get('flight_number'),
+                    flight_data.get('departure_date'),
+                    flight_data.get('departure_time'),
+                    flight_data.get('arrival_date'),
+                    flight_data.get('arrival_time'),
+                    flight_data.get('cost') or 0,
+                    flight_data.get('description'),
+                    flight_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating flight: {e}")
+        return False
+
 def update_hotel(hotel_id, hotel_data):
     """
     Update a hotel in the database for a specific hotel ID
@@ -701,7 +742,7 @@ def add_hotel_route(trip_id, hotel_id=None):
             return redirect(url_for('plan_trip', trip_id=trip_id))
         else:
             flash('Check-out date cannot be before check-in date.', 'error')
-            return redirect(url_for('add_hotel_route', trip_id=trip_id))
+            return redirect(url_for('add_hotel_route', trip_id=trip_id, hotel_id=hotel_id))
         
     return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels, hotel_to_edit=hotel_to_edit)
     
@@ -714,7 +755,8 @@ def add_extra_cost_route(trip_id):
     pass
 
 @app.route('/add_flight_route/<int:trip_id>', methods=['GET', 'POST'])
-def add_flight_route(trip_id):
+@app.route('/add_flight_route/<int:trip_id>/<int:flight_id>', methods=['GET', 'POST'])
+def add_flight_route(trip_id, flight_id=None):
     """
     Add a new flight to a specific trip.
     """
@@ -731,6 +773,14 @@ def add_flight_route(trip_id):
             return redirect(url_for('view_trips'))
         
         flights = get_flights(trip_id)
+
+        flight_to_edit = None
+
+        if flight_id is not None:
+            flight_to_edit = get_item_to_edit('flights', flight_id)
+            if flight_to_edit is None:
+                flash('Flight not found for editing.', 'error')
+                return redirect(url_for('plan_trip', trip_id=trip_id))
 
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
@@ -751,6 +801,13 @@ def add_flight_route(trip_id):
         }
 
         if validate_end_date(flight_data['departure_date'], flight_data['arrival_date']) is True:
+            if flight_id is not None:
+                if update_flight(flight_id, flight_data):
+                    flash(f"Flight '{flight_data['flight_number']}' updated successfully!", 'success')
+                else:
+                    flash('Error updating flight. Please try again.', 'error')
+                return redirect(url_for('plan_trip', trip_id=trip_id))
+
             if add_flight(flight_data):
                 flash(f"Flight '{flight_data['flight_number']}' added successfully!", 'success')
             else:
@@ -758,9 +815,9 @@ def add_flight_route(trip_id):
             return redirect(url_for('plan_trip', trip_id=trip_id))
         else:
             flash('Arrival date cannot be before departure date.', 'error')
-            return redirect(url_for('add_flight_route', trip_id=trip_id))
+            return redirect(url_for('add_flight_route', trip_id=trip_id, flight_id=flight_id))
     
-    return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights)
+    return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights, flight_to_edit=flight_to_edit)
 
 # --- Delete Routes ---
 @app.route('/delete_flight/<int:flight_id>/<int:trip_id>')
