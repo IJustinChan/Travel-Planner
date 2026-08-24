@@ -614,6 +614,45 @@ def update_hotel(hotel_id, hotel_data):
         print(f"Error updating hotel: {e}")
         return False
 
+def update_activity(activity_id, activity_data):
+    """
+    Update an activity in the database for a specific activity ID
+    :param activity_id: ID of the activity to update
+    :param activity_data: Dictionary containing updated activity information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE 
+                Activities 
+            SET 
+                activity_name = ?, 
+                activity_type = ?, 
+                activity_date = ?, 
+                activity_time = ?, 
+                location = ?, 
+                description = ?, 
+                cost = ? 
+            WHERE 
+                id = ?''', (
+                    activity_data.get('activity_name'),
+                    activity_data.get('activity_type'),
+                    activity_data.get('activity_date'),
+                    activity_data.get('activity_time'),
+                    activity_data.get('location'),
+                    activity_data.get('description'),
+                    activity_data.get('cost') or 0,
+                    activity_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating activity: {e}")
+        return False
+
 # --- Delete Database Information Of Single Rows ---
 def delete_flight_record(trip_id, flight_id):
     """
@@ -787,12 +826,65 @@ def plan_trip(trip_id):
         flash('Error loading trip.', 'error')
         return redirect(url_for('view_trips'))
     
-@app.route('/add_activity/<int:trip_id>', methods=['POST'])
-def add_activity_route(trip_id):
+@app.route('/add_activity_route/<int:trip_id>', methods=['GET', 'POST'])
+@app.route('/add_activity_route/<int:trip_id>/<int:activity_id>', methods=['GET', 'POST'])
+def add_activity_route(trip_id, activity_id=None):
     """
     Add a new activity to a specific trip.
     """
-    pass
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+
+        activities = get_activities(trip_id)
+
+        activity_to_edit = None
+
+        if activity_id is not None:
+            activity_to_edit = get_item_to_edit('activities', activity_id)
+            if activity_to_edit is None:
+                flash('Activity not found for editing.', 'error')
+                return redirect(url_for('plan_trip', trip_id=trip_id))
+
+    except Exception as e:
+        print(f"Error loading trip for planning: {e}")
+        flash('Error loading add activity page.', 'error')
+        return redirect(url_for('view_trips'))
+    
+    if request.method == 'POST':
+        activity_data = {
+            'trip_id': trip_id,
+            'activity_name': request.form.get('activity_name'),
+            'activity_type': request.form.get('activity_type'),
+            'activity_date': request.form.get('activity_date'),
+            'activity_time': request.form.get('activity_time'),
+            'location': request.form.get('location'),
+            'description': request.form.get('description'),
+            'cost': request.form.get('cost')
+        }
+
+        if activity_id is not None:
+            if update_activity(activity_id, activity_data):
+                flash(f"Activity '{activity_data['activity_name']}' updated successfully!", 'success')
+            else:
+                flash('Error updating activity. Please try again.', 'error')
+            return redirect(url_for('plan_trip', trip_id=trip_id))
+        
+        if add_activity(activity_data):
+            flash(f"Activity '{activity_data['activity_name']}' added successfully!", 'success')
+        else:
+            flash('Error adding activity. Please try again.', 'error')
+        return redirect(url_for('plan_trip', trip_id=trip_id))
+
+    return render_template('add_activity_route.html', trip_id=trip_id, trip=trip, activities=activities, activity_to_edit=activity_to_edit)
 
 @app.route('/add_hotel_route/<int:trip_id>', methods=['GET', 'POST'])
 @app.route('/add_hotel_route/<int:trip_id>/<int:hotel_id>', methods=['GET', 'POST'])
