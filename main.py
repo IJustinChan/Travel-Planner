@@ -5,6 +5,8 @@ import sqlite3
 from datetime import datetime
 import pathlib
 
+from weather_information import get_weather
+
 app = Flask(__name__) # Create the flask app
 app.secret_key = 'travel_planner_secret_key' # For flash messages
 
@@ -18,6 +20,7 @@ def set_up_database():
     create_hotel_table()
     create_extra_costs_table()
     create_flight_table()
+    create_weather_info_table()
 
 def create_trip_info_table():
     """
@@ -141,6 +144,30 @@ def create_extra_costs_table():
                 cost REAL NOT NULL,
                 date DATE NOT NULL,
                 description TEXT,
+                FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
+            )
+        ''')
+        connection.commit()
+        connection.close()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+def create_weather_info_table():
+    """
+    Create a table to store daily weather information for the trip.
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            CREATE TABLE WeatherInfo (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trip_id INTEGER NOT NULL,
+                weather_date DATE NOT NULL,
+                temperature_max REAL,
+                temperature_min REAL,
+                precipitation_probability REAL,
+                precipitation_sum REAL,
                 FOREIGN KEY (trip_id) REFERENCES TripInfo(id)
             )
         ''')
@@ -300,6 +327,33 @@ def add_extra_cost(extra_cost_data):
         print(f"Error creating extra cost: {e}")
         return False
 
+def add_weather_info(weather_data):
+    """
+    Saves a new weather information for a particular day into the database and returns true if successful, false otherwise
+    :param weather_data: Dictionary containing weather information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO WeatherInfo
+            (trip_id, weather_date, temperature_max, temperature_min, precipitation_probability, precipitation_sum)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            weather_data.get('trip_id'),
+            weather_data.get('weather_date'),
+            weather_data.get('temperature_max'),
+            weather_data.get('temperature_min'),
+            weather_data.get('precipitation_probability'),
+            weather_data.get('precipitation_sum')
+        ))
+        connection.commit()
+        connection.close()
+    except Exception as e:
+        print(f"Error creating weather information: {e}")
+        return False
+
 # --- Retrieve Database Information ---
 def get_trips():
     """
@@ -421,6 +475,31 @@ def get_extra_costs(trip_id):
         return extra_costs
     except Exception as e:
         print(f"Error retrieving extra costs: {e}")
+        return []
+
+def get_weather_info(trip_id):
+    """
+    Retrieve all weather data for a specific trip from the database
+    :param trip_id: ID of the trip
+    :return: List of weather information
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        weather_info = cursor.execute('''
+            SELECT 
+                * 
+            FROM 
+                WeatherInfo 
+            WHERE 
+                trip_id = ? 
+            ORDER BY 
+                date ASC''', (trip_id,)).fetchall()
+        connection.close()
+        return weather_info
+    except Exception as e:
+        print(f"Error retrieving weather information: {e}")
         return []
     
 # --- Get Single Item From Database ---
@@ -686,6 +765,39 @@ def update_extra_cost(extra_cost_id, extra_cost_data):
         print(f"Error updating extra cost: {e}")
         return False
 
+def update_weather_info(weather_info_id, new_weather_data):
+    """
+    Updates a weather info of a specific day in the database with new information
+    :param weather_info_id: ID of the weather row to update
+    :param new_weather_data: Dictionary containing updated weather information
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE
+                WeatherInfo
+            SET
+                temperature_max = ?,
+                temperature_min = ?,
+                precipitation_probability = ?,
+                precipitation_sum = ?
+            WHERE
+                id = ?''', (
+                    new_weather_data.get('temperature_max'),
+                    new_weather_data.get('temperature_min') or 0,
+                    new_weather_data.get('precipitation_probability'),
+                    new_weather_data.get('precipitation_sum'),
+                    weather_info_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating weather information: {e}")
+        return False
+
 # --- Delete Database Information Of Single Rows ---
 def delete_flight_record(trip_id, flight_id):
     """
@@ -799,6 +911,7 @@ def delete_trip_and_associated_records(trip_id):
         cursor.execute('DELETE FROM Hotels WHERE trip_id = ?', (trip_id,))
         cursor.execute('DELETE FROM Activities WHERE trip_id = ?', (trip_id,))
         cursor.execute('DELETE FROM ExtraCosts WHERE trip_id = ?', (trip_id,))
+        cursor.execute('DELETE FROM WeatherInfo WHERE trip_id = ?', (trip_id,))
 
         # Delete the trip itself
         cursor.execute('DELETE FROM TripInfo WHERE id = ?', (trip_id,))

@@ -1,15 +1,11 @@
 import requests
 
-def get_weather(city, country, start_date, end_date):
+def get_location_information(city, country):
     """
-    returns the information about the weather of a city and country from start_date to end_date
+    returns location details of a city in given country
     :param city: name of city as a string
     :param country: name of country as a string
-    :param start_date: date string in YYYY-MM-DD format
-    :param end_date: date string in YYYY-MM-DD format
-    :return: dictionary containing weather data for each day from start_date to end_date
     """
-    # Get the longitude and latitude using the city and country
     geocoding_url = "https://geocoding-api.open-meteo.com/v1/search"
 
     geocoding_params = {
@@ -23,6 +19,19 @@ def get_weather(city, country, start_date, end_date):
         params=geocoding_params)
 
     geocoding_data = geocoding_response.json()
+    return geocoding_data
+
+def get_weather(city, country, start_date, end_date):
+    """
+    returns the information about the weather of a city in given country from start_date to end_date
+    :param city: name of city as a string
+    :param country: name of country as a string
+    :param start_date: date string in YYYY-MM-DD format
+    :param end_date: date string in YYYY-MM-DD format
+    :return: dictionary containing weather data for each day from start_date to end_date
+    """
+    # Get the longitude and latitude using the city and country
+    geocoding_data = get_location_information(city, country)
 
     # No matching city found
     if "results" not in geocoding_data:
