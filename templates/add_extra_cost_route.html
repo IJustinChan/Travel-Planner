@@ -26,6 +26,14 @@
         </div>
     </header>
 
+    <div class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('plan_trip', trip_id=trip_id) }}">Return to Trip Planning</a>
+        </div>
+    </div>
+
+    <br>
+
     <main class="container">
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -74,39 +82,41 @@
             <h1>{{ 'Edit ' if extra_cost_to_edit else 'Add ' }} Extra Cost</h1>
 
             {% if extra_cost_to_edit %}
-                <form method="POST"
+                <form class="trip-form" method="POST"
                     action="{{ url_for('add_extra_cost_route',
                                         trip_id=trip_id,
                                         extra_cost_id=extra_cost_to_edit['id']) }}">
             {% else %}
-                <form method="POST"
+                <form class="trip-form" method="POST"
                     action="{{ url_for('add_extra_cost_route',
                                         trip_id=trip_id) }}">
             {% endif %}
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="name">Extra Cost Name:</label>
+                        <label for="name">Extra Cost Name *</label>
                         <input type="text" id="name" name="name"
-                        value="{{ extra_cost_to_edit['name'] if extra_cost_to_edit else '' }}" required>
+                        value="{{ extra_cost_to_edit['name'] if extra_cost_to_edit else '' }}"
+                        placeholder="e.g. Grocery shopping at Walmart" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="date">Date:</label>
+                        <label for="date">Date *</label>
                         <input type="date" id="date" name="date" value="{{ extra_cost_to_edit['date'] if extra_cost_to_edit else '' }}" required>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="cost">Cost ($):</label>
+                        <label for="cost">Cost ($) *</label>
                         <input type="number" id="cost" name="cost" step="0.01"
-                        value="{{ extra_cost_to_edit['cost'] if extra_cost_to_edit else '' }}" required>
+                        value="{{ extra_cost_to_edit['cost'] if extra_cost_to_edit else '' }}" placeholder="0.00" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Short Description (optional):</label>
-                        <textarea id="description" name="description">{{ extra_cost_to_edit['description'] if extra_cost_to_edit else '' }}</textarea>
+                        <label for="description">Short Description (optional)</label>
+                        <textarea id="description" name="description" placeholder="Add any details about this extra cost..."
+                        >{{ extra_cost_to_edit['description'] if extra_cost_to_edit else '' }}</textarea>
                     </div>
                 </div>
 

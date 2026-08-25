@@ -83,7 +83,7 @@
                             >
                         </div>
                         <div class="form-group">
-                            <label for="country">Country</label>
+                            <label for="country">Country *</label>
                             <input 
                                 type="text" 
                                 id="country" 
@@ -120,7 +120,7 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="budget">Budget (USD)</label>
+                            <label for="budget">Budget (USD) *</label>
                             <input 
                                 type="number" 
                                 id="budget" 
@@ -133,7 +133,7 @@
                             >
                         </div>
                         <div class="form-group">
-                            <label for="num-travelers">Number of Travelers</label>
+                            <label for="num-travelers">Number of Travelers *</label>
                             <input 
                                 type="number" 
                                 id="num-travelers" 
@@ -158,7 +158,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="travel-mode">Mode of Travel</label>
+                        <label for="travel-mode">Mode of Travel *</label>
                         <select id="travel-mode" name="travel_mode" required>
                             <option value="">Select a mode</option>
                             <option value="Flight">Flight (Airplane)</option>
@@ -173,7 +173,7 @@
                             type="text" 
                             id="companions" 
                             name="companions" 
-                            placeholder="e.g., John, Sarah, Mike"
+                            placeholder="e.g., Joe, Sarah, Mike"
                             value="{{ trip_to_edit['companions'] if trip_to_edit else '' }}"
                         >
                     </div>

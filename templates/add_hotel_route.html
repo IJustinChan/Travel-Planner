@@ -95,40 +95,42 @@
             <h1>{{ 'Edit' if hotel_to_edit else 'Add' }} Hotel</h1>
 
             {% if hotel_to_edit %}
-                <form method="POST"
+                <form class="trip-form" method="POST"
                     action="{{ url_for('add_hotel_route',
                                         trip_id=trip_id,
                                         hotel_id=hotel_to_edit['id']) }}">
             {% else %}
-                <form method="POST"
+                <form class="trip-form" method="POST"
                     action="{{ url_for('add_hotel_route',
                                         trip_id=trip_id) }}">
             {% endif %}
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="hotel_name">Hotel Name:</label>
+                        <label for="hotel_name">Hotel Name *</label>
                         <input type="text" id="hotel_name" name="hotel_name"
-                        value="{{ hotel_to_edit['hotel_name'] if hotel_to_edit else '' }}" required>
+                        value="{{ hotel_to_edit['hotel_name'] if hotel_to_edit else '' }}" 
+                        placeholder="The hotel you will be staying at" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="location">Location:</label>
+                        <label for="location">Location *</label>
                         <input type="text" id="location" name="location"
-                        value="{{ hotel_to_edit['location'] if hotel_to_edit else '' }}" required>
+                        value="{{ hotel_to_edit['location'] if hotel_to_edit else '' }}"
+                        placeholder="Hotel's Address" required>
                     </div>
 
                 </div>
                
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="check_in_date">Check-in Date:</label>
+                        <label for="check_in_date">Check-in Date *</label>
                         <input type="date" id="check_in_date" name="check_in_date"
                         value="{{ hotel_to_edit['check_in_date'] if hotel_to_edit else '' }}" required>
                     </div>
     
                     <div class="form-group">
-                        <label for="check_out_date">Check-out Date:</label>
+                        <label for="check_out_date">Check-out Date *</label>
                         <input type="date" id="check_out_date" name="check_out_date"
                         value="{{ hotel_to_edit['check_out_date'] if hotel_to_edit else '' }}" required>
                     </div>
@@ -136,14 +138,15 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="cost_per_day">Cost Per Night ($):</label>
+                        <label for="cost_per_day">Cost Per Night ($) *</label>
                         <input type="number" id="cost_per_day" name="cost_per_day" step="0.01"
-                        value="{{ hotel_to_edit['cost_per_day'] if hotel_to_edit else '' }}" required>
+                        value="{{ hotel_to_edit['cost_per_day'] if hotel_to_edit else '' }}"
+                        placeholder="e.g. 300" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Short Description (optional):</label>
-                        <textarea id="description" name="description">{{ hotel_to_edit['description'] if hotel_to_edit else '' }}</textarea>
+                        <label for="description">Short Description (optional)</label>
+                        <textarea id="description" name="description" placeholder="Add any details about this hotel...">{{ hotel_to_edit['description'] if hotel_to_edit else '' }}</textarea>
                     </div>
                 </div>
 

@@ -97,50 +97,50 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="airline">Airline:</label>
-                        <input type="text" id="airline" name="airline" value="{{ flight_to_edit['airline'] if flight_to_edit else '' }}" required>
+                        <label for="airline">Airline *</label>
+                        <input type="text" id="airline" name="airline" placeholder="e.g. Air Canada" value="{{ flight_to_edit['airline'] if flight_to_edit else '' }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="flight_number">Flight Number:</label>
-                        <input type="text" id="flight_number" name="flight_number" value="{{ flight_to_edit['flight_number'] if flight_to_edit else '' }}" required>
+                        <label for="flight_number">Flight Number *</label>
+                        <input type="text" id="flight_number" name="flight_number" placeholder="e.g. 305" value="{{ flight_to_edit['flight_number'] if flight_to_edit else '' }}" required>
                     </div>
 
                 </div>
                
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="departure_date">Departure Date:</label>
+                        <label for="departure_date">Departure Date *</label>
                         <input type="date" id="departure_date" name="departure_date" value="{{ flight_to_edit['departure_date'] if flight_to_edit else '' }}" required>
                     </div>
     
                     <div class="form-group">
-                        <label for="departure_time">Departure Time:</label>
+                        <label for="departure_time">Departure Time *</label>
                         <input type="time" id="departure_time" name="departure_time" value="{{ flight_to_edit['departure_time'] if flight_to_edit else '' }}" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="arrival_date">Arrival Date:</label>
+                        <label for="arrival_date">Arrival Date *</label>
                         <input type="date" id="arrival_date" name="arrival_date" value="{{ flight_to_edit['arrival_date'] if flight_to_edit else '' }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="arrival_time">Arrival Time:</label>
+                        <label for="arrival_time">Arrival Time *</label>
                         <input type="time" id="arrival_time" name="arrival_time" value="{{ flight_to_edit['arrival_time'] if flight_to_edit else '' }}" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="cost">Cost ($):</label>
-                        <input type="number" id="cost" name="cost" step="0.01" value="{{ flight_to_edit['cost'] if flight_to_edit else '' }}" required>
+                        <label for="cost">Cost ($) *</label>
+                        <input type="number" id="cost" name="cost" step="0.01" placeholder="Total cost of the flight" value="{{ flight_to_edit['cost'] if flight_to_edit else '' }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Short Description (optional):</label>
-                        <textarea id="description" name="description">{{ flight_to_edit['description'] if flight_to_edit else '' }}</textarea>
+                        <label for="description">Short Description (optional)</label>
+                        <textarea id="description" name="description" placeholder="Add any details about this flight...">{{ flight_to_edit['description'] if flight_to_edit else '' }}</textarea>
                     </div>
                 </div>
 
