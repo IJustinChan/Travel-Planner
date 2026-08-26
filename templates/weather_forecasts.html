@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>{{ trip['trip_name'] }} - Weather Forecast</h1>
+            <h2>{{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</h2>
+            <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('plan_trip', trip_id=trip_id) }}">Return to Trip Planning</a>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="display-container">
+            <h2>Weather Forecast</h2>
+
+            <div class="trip-card">
+                <p>Below displays the predicted weather conditions for each day of your trip. Forecasts longer than a few days may not be accurate.</p>
+                <p>The information shows forecast for dates within 14 days from today and it is updated every day.</p>
+
+                {% if weather_info %}
+                    <table class="info-table">
+                        <tr>
+                            <th>Date</th>
+                            <th>Min Temperature (&deg;C)</th>
+                            <th>Max Temperature (&deg;C)</th>
+                            <th>Total Precipitation (mm)</th>
+                            <th>Max Precipitation Probability (%)</th>
+                        </tr>
+                        {% for day_weather in weather_info %}
+                        <tr>
+                            <td>{{ day_weather['weather_date'] }}</td>
+                            <td>{{ day_weather['temperature_min'] if day_weather['temperature_min'] is not none else 'N/A' }}</td>
+                            <td>{{ day_weather['temperature_max'] if day_weather['temperature_max'] is not none else 'N/A' }}</td>
+                            <td>{{ day_weather['precipitation_sum'] if day_weather['precipitation_sum'] is not none else 'N/A' }}</td>
+                            <td>{{ day_weather['precipitation_probability'] if day_weather['precipitation_probability'] is not none else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+                {% else %}
+                    <p>No forecast available.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+
+</body>
+
+</html>

@@ -1024,7 +1024,6 @@ def view_trips():
     trips = get_trips()
     return render_template("trips.html", trips=trips)
 
-
 @app.route('/plan/<int:trip_id>')
 def plan_trip(trip_id):
     """
@@ -1051,7 +1050,6 @@ def plan_trip(trip_id):
         hotels = get_hotels(trip_id)
         flights = get_flights(trip_id)
         extra_costs = get_extra_costs(trip_id)
-        weather_info = get_weather_info(trip_id)
 
         # Calculate total costs
         all_costs = {
@@ -1062,7 +1060,7 @@ def plan_trip(trip_id):
             'total_cost': calculate_overall_cost(trip_id)
         }
 
-        return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs, weather_info=weather_info)
+        return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
         flash('Error loading trip.', 'error')
@@ -1316,6 +1314,36 @@ def add_flight_route(trip_id, flight_id=None):
     
     return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights, flight_to_edit=flight_to_edit)
 
+@app.route('/weather_forecasts/<int:trip_id>', methods=['GET', 'POST'])
+def trip_weather(trip_id):
+    """
+    Shows the weather forecast for days during the trip
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+        
+        # Updates weather information at the end of every day
+        if check_date_in_past(trip['weather_updated_at']):
+            store_weather_for_trip(trip['id'], trip['destination'], trip['country'], trip['start_date'], trip['end_date'])
+        
+        weather_info = get_weather_info(trip_id)
+
+    except Exception as e:
+        print(f"Error loading trip for planning: {e}")
+        flash('Error loading add flight page.', 'error')
+        return redirect(url_for('view_trips'))
+
+    return render_template('weather_forecasts.html', trip=trip, trip_id=trip_id, weather_info=weather_info)
+
 # --- Delete Routes ---
 @app.route('/delete_trip/<int:trip_id>')
 def delete_trip(trip_id):
@@ -1564,8 +1592,6 @@ def store_weather_for_trip(trip_id, city, country, start_date, end_date):
                     'precipitation_probability': precipitation_probabilities[i] if i < len(precipitation_probabilities) else None,
                     'precipitation_sum': precipitation_sums[i] if i < len(precipitation_sums) else None,
                 }
-
-    print(weather_lookup)
 
     trip_start = datetime.strptime(start_date, '%Y-%m-%d').date()
     trip_end = datetime.strptime(end_date, '%Y-%m-%d').date()
