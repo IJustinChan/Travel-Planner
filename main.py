@@ -1041,6 +1041,10 @@ def plan_trip(trip_id):
         if trip is None:
             flash('Trip not found.', 'error')
             return redirect(url_for('view_trips'))
+        
+        # Updates weather information at the end of every day
+        if check_date_in_past(trip['weather_updated_at']):
+            store_weather_for_trip(trip['id'], trip['destination'], trip['country'], trip['start_date'], trip['end_date'])
 
         # Fetch related data
         activities = get_activities(trip_id)
@@ -1384,7 +1388,7 @@ def delete_extra_cost(extra_cost_id, trip_id):
 
 # --- Methods ---
 def check_valid_date(start_date, end_date):
-    if validate_end_date(start_date, end_date) is True and check_day_after_today(start_date) is True:
+    if validate_end_date(start_date, end_date) is True and check_date_after_today(start_date) is True:
         return True
     else:
         return False
@@ -1403,15 +1407,27 @@ def validate_end_date(start_date, end_date):
     except ValueError:
         return False
 
-def check_day_after_today(date_input):
+def check_date_after_today(date_input):
     """
     Validate that the given date is either today or after today
     :param date: String in YYYY-MM-DD format
-    :return: Boolean indicating if the given date is valid
+    :return: Boolean indicating if the given date is today or after today
     """
     try:
         converted_date = datetime.strptime(date_input, '%Y-%m-%d').date()
         return converted_date >= date.today()
+    except ValueError:
+        return False
+
+def check_date_in_past(date_input):
+    """
+    Checks if given date is before today
+    :param date_input: String in YYYY-MM-DD format
+    :return: Boolean indicating if the date is before today or not
+    """
+    try:
+        converted_date = datetime.strptime(date_input, '%Y-%m-%d').date()
+        return converted_date < date.today()
     except ValueError:
         return False
 
@@ -1548,6 +1564,8 @@ def store_weather_for_trip(trip_id, city, country, start_date, end_date):
                     'precipitation_probability': precipitation_probabilities[i] if i < len(precipitation_probabilities) else None,
                     'precipitation_sum': precipitation_sums[i] if i < len(precipitation_sums) else None,
                 }
+
+    print(weather_lookup)
 
     trip_start = datetime.strptime(start_date, '%Y-%m-%d').date()
     trip_end = datetime.strptime(end_date, '%Y-%m-%d').date()
