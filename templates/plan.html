@@ -20,6 +20,7 @@
     <header class="hero">
         <div class="container">
             <h1>{{ trip['trip_name'] }}</h1>
+            <h2>{{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</h2>
             <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
             <p>Plan all your trip details here. Make your travel fun and memorable!</p>
             <br>
@@ -263,6 +264,44 @@
 
             <div class="form-actions" style="margin-top: 1rem;">
                 <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_extra_cost_route', trip_id=trip['id']) }}">Add Extra Cost</a>
+            </div>
+
+        </div>
+    </div>
+
+    <br>
+
+    <div class="container">
+        <div class="display-container">
+            <h2>Weather Forecast</h2>
+
+            <div class="trip-card">
+                <p>Below displays the predicted weather conditions for each day of your trip. Forecasts longer than a few days may not be accurate.</p>
+                <p>The information shows forecast for dates within 14 days from today and it is updated every day.</p>
+
+                {% if weather_info %}
+                    <table class="info-table">
+                        <tr>
+                            <th>Date</th>
+                            <th>Min Temperature (&deg;C)</th>
+                            <th>Max Temperature (&deg;C)</th>
+                            <th>Total Precipitation (mm)</th>
+                            <th>Max Precipitation Probability (%)</th>
+                        </tr>
+                        {% for day_weather in weather_info %}
+                        <tr>
+                            <td>{{ day_weather['weather_date'] }}</td>
+                            <td>{{ day_weather['temperature_min'] if day_weather['temperature_min'] is not none else 'N/A' }}</td>
+                            <td>{{ day_weather['temperature_max'] if day_weather['temperature_max'] is not none else 'N/A' }}</td>
+                            <td>{{ day_weather['precipitation_sum'] if day_weather['precipitation_sum'] is not none else 'N/A' }}</td>
+                            <td>{{ day_weather['precipitation_probability'] if day_weather['precipitation_probability'] is not none else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+                {% else %}
+                    <p>No forecast available.</p>
+                {% endif %}
             </div>
 
         </div>
