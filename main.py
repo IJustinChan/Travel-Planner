@@ -42,7 +42,8 @@ def create_trip_info_table():
                 description TEXT,
                     travel_mode TEXT,
                 companions TEXT,
-                created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                weather_updated_at DATE NOT NULL
             )
         ''')
         connection.commit()
@@ -180,6 +181,8 @@ def create_weather_info_table():
 def add_trip(trip_data):
     """
     Save a new trip to the database and returns true if successful, false otherwise.
+    Also calls weather api to get weather information and save those data into the database.
+    This function works on this additional task because it has access to the id of the trip, which by default is set to autoincrement
     :param trip_data: Dictionary containing trip information
     :return: Boolean indicating success or failure
     """
@@ -188,8 +191,8 @@ def add_trip(trip_data):
         cursor = connection.cursor()
         cursor.execute('''
             INSERT INTO TripInfo 
-            (trip_name, destination, country, start_date, end_date, budget, num_travelers, description, travel_mode, companions)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (trip_name, destination, country, start_date, end_date, budget, num_travelers, description, travel_mode, companions, weather_updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             trip_data.get('trip_name'),
             trip_data.get('destination'),
@@ -200,10 +203,21 @@ def add_trip(trip_data):
             trip_data.get('num_travelers') or 1,
             trip_data.get('description'),
             trip_data.get('travel_mode'),
-            trip_data.get('companions')
+            trip_data.get('companions'),
+            trip_data.get('start_date')
         ))
+        trip_id = cursor.lastrowid
         connection.commit()
         connection.close()
+
+        store_weather_for_trip(
+            trip_id,
+            trip_data.get('destination'),
+            trip_data.get('country'),
+            trip_data.get('start_date'),
+            trip_data.get('end_date')
+        )
+
         return True
     except Exception as e:
         print(f"Error creating trip: {e}")
@@ -329,7 +343,7 @@ def add_extra_cost(extra_cost_data):
 
 def add_weather_info(weather_data):
     """
-    Saves a new weather information for a particular day into the database and returns true if successful, false otherwise
+    Saves new weather information for a particular day into the database and returns true if successful, false otherwise.
     :param weather_data: Dictionary containing weather information
     :return: Boolean indicating success or failure
     """
@@ -350,6 +364,7 @@ def add_weather_info(weather_data):
         ))
         connection.commit()
         connection.close()
+        return True
     except Exception as e:
         print(f"Error creating weather information: {e}")
         return False
@@ -370,7 +385,7 @@ def get_trips():
             FROM 
                 TripInfo 
             ORDER BY 
-                start_date DESC''').fetchall()
+                start_date ASC''').fetchall()
         connection.close()
         return trips
     except Exception as e:
@@ -495,7 +510,7 @@ def get_weather_info(trip_id):
             WHERE 
                 trip_id = ? 
             ORDER BY 
-                date ASC''', (trip_id,)).fetchall()
+                weather_date ASC''', (trip_id,)).fetchall()
         connection.close()
         return weather_info
     except Exception as e:
@@ -523,9 +538,7 @@ def get_single_trip(trip_id):
         WHERE 
             id = ?''', (trip_id,)
     ).fetchone()
-
     connection.close()
-
     return trip
 
 def get_item_to_edit(item_type, item_id):
@@ -562,7 +575,6 @@ def get_item_to_edit(item_type, item_id):
         WHERE 
             id = ?''', (item_id,)
     ).fetchone()
-
     connection.close()
 
     return item
@@ -591,7 +603,8 @@ def update_trip(trip_id, trip_data):
                 num_travelers = ?, 
                 description = ?, 
                 travel_mode = ?, 
-                companions = ? 
+                companions = ?,
+                weather_updated_at = ?
             WHERE 
                 id = ?''', (
                     trip_data.get('trip_name'),
@@ -604,6 +617,7 @@ def update_trip(trip_id, trip_data):
                     trip_data.get('description'),
                     trip_data.get('travel_mode'),
                     trip_data.get('companions'),
+                    trip_data.get('start_date'),
                     trip_id
                 ))
         connection.commit()
@@ -980,6 +994,12 @@ def home(trip_id=None):
         if check_valid_date(trip_data['start_date'], trip_data['end_date']) is True:
             if trip_id is not None:
                 if update_trip(trip_id, trip_data):
+                    # Add new weather information
+                    try:
+                        store_weather_for_trip(trip_id, trip_data.get('destination'), trip_data.get('country'), trip_data.get('start_date'), trip_data.get('end_date'))
+                    except Exception as e:
+                        print(f"Error retrieving weather for trip: {e}")
+
                     flash(f"Trip '{trip_data['trip_name']}' updated successfully!", 'success')
                 else:
                     flash('Error updating trip. Please try again.', 'error')
@@ -1027,6 +1047,7 @@ def plan_trip(trip_id):
         hotels = get_hotels(trip_id)
         flights = get_flights(trip_id)
         extra_costs = get_extra_costs(trip_id)
+        weather_info = get_weather_info(trip_id)
 
         # Calculate total costs
         all_costs = {
@@ -1037,7 +1058,7 @@ def plan_trip(trip_id):
             'total_cost': calculate_overall_cost(trip_id)
         }
 
-        return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
+        return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs, weather_info=weather_info)
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
         flash('Error loading trip.', 'error')
@@ -1439,7 +1460,7 @@ def calculate_overall_cost(trip_id):
     except Exception as e:
         print(f"Error calculating total cost: {e}")
         return 0.0
-    
+
 def number_of_days(start_date_str, end_date_str):
     """
     Calculate the number of days between two dates.
@@ -1458,6 +1479,7 @@ def number_of_days(start_date_str, end_date_str):
 def get_available_forecast_dates(start_date, end_date):
     """
     Finds days between start_date and end_date with available weather information
+    The Open-Meteo 14-day forecast window is capped to 14 days from today.
     :param start_date: Date as a string in YYYY-MM-DD format
     :param end_date: Date as a string in YYYY-MM-DD format
     :return: Date, Date indicating the start and end dates with available forecast, or None, indicating there are no days to with available forecast
@@ -1467,7 +1489,7 @@ def get_available_forecast_dates(start_date, end_date):
     trip_start = datetime.strptime(start_date, "%Y-%m-%d").date()
     trip_end = datetime.strptime(end_date, "%Y-%m-%d").date()
 
-    today = datetime.today()
+    today = datetime.today().date()
     latest_forecast_date = today + timedelta(days=max_forecast_days)
 
     # Entire trip is in the past
@@ -1477,7 +1499,7 @@ def get_available_forecast_dates(start_date, end_date):
     # Entire trip is too far in the future
     if trip_start > latest_forecast_date:
         return None
-    
+
     # Don't request dates before today
     forecast_start = max(trip_start, today)
 
@@ -1485,6 +1507,68 @@ def get_available_forecast_dates(start_date, end_date):
     forecast_end = min(trip_end, latest_forecast_date)
 
     return forecast_start, forecast_end
+
+def store_weather_for_trip(trip_id, city, country, start_date, end_date):
+    """
+    Fetch weather data for a trip and save each day into the WeatherInfo table.
+    Days outside the 14-day forecast window are still saved with NULL values.
+    :param city: name of city as a string
+    :param country: name of country as a string
+    :param start_date: date string in YYYY-MM-DD format
+    :param end_date: date string in YYYY-MM-DD format
+    :return: Boolean indicating success or failure
+    """
+    if trip_id is None or not city or not start_date or not end_date:
+        return False
+
+    delete_trip_weather_info(trip_id) # Remove any pre-existing information
+
+    forecast_window = get_available_forecast_dates(start_date, end_date)
+    weather_lookup = {}
+
+    if forecast_window is not None:
+        forecast_start, forecast_end = forecast_window
+        try:
+            weather_data = get_weather(city, country or '', forecast_start.isoformat(), forecast_end.isoformat())
+        except Exception as e:
+            print(f"Error fetching weather forecast: {e}")
+            weather_data = None
+
+        if weather_data:
+            dates = weather_data.get('time', [])
+            max_temps = weather_data.get('temperature_2m_max', [])
+            min_temps = weather_data.get('temperature_2m_min', [])
+            precipitation_probabilities = weather_data.get('precipitation_probability_max', [])
+            precipitation_sums = weather_data.get('precipitation_sum', [])
+
+            for i, weather_date in enumerate(dates):
+                weather_lookup[weather_date] = {
+                    'temperature_max': max_temps[i] if i < len(max_temps) else None,
+                    'temperature_min': min_temps[i] if i < len(min_temps) else None,
+                    'precipitation_probability': precipitation_probabilities[i] if i < len(precipitation_probabilities) else None,
+                    'precipitation_sum': precipitation_sums[i] if i < len(precipitation_sums) else None,
+                }
+
+    trip_start = datetime.strptime(start_date, '%Y-%m-%d').date()
+    trip_end = datetime.strptime(end_date, '%Y-%m-%d').date()
+    current_date = trip_start
+
+    while current_date <= trip_end:
+        weather_key = current_date.isoformat()
+        row_data = weather_lookup.get(weather_key, {})
+
+        weather_info = {
+            'trip_id': trip_id,
+            'weather_date': weather_key,
+            'temperature_max': row_data.get('temperature_max'),
+            'temperature_min': row_data.get('temperature_min'),
+            'precipitation_probability': row_data.get('precipitation_probability'),
+            'precipitation_sum': row_data.get('precipitation_sum'),
+        }
+        add_weather_info(weather_info)
+        current_date += timedelta(days=1)
+
+    return True
 
 
 if __name__ == "__main__":

@@ -72,9 +72,9 @@ def get_weather(city, country, start_date, end_date):
 if __name__ == "__main__":
     weather = get_weather(
         "Edmonton",
-        "Alberta",
+        "Canada",
         "2026-08-24",
-        "2026-09-09")
+        "2026-09-02")
 
     print(weather)
 
