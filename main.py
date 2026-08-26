@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, flash, url_for
 import pathlib
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import pathlib
 
 from weather_information import get_weather
@@ -895,6 +895,29 @@ def delete_extra_cost_record(trip_id, extra_cost_id):
         print(f"Error deleting extra cost: {e}")
         return False
 
+# --- Delete All Weather Info for a Trip ---
+def delete_trip_weather_info(trip_id):
+    """
+    Delete all weather information for all days associated with a specific trip
+    :param trip_id: ID of the trip
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            DELETE FROM
+                WeatherInfo
+            WHERE
+                trip_id = ?
+        ''', (trip_id,))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting weather information: {e}")
+        return False
+
 # --- Delete Entire Trip and Associated Records ---
 def delete_trip_and_associated_records(trip_id):
     """
@@ -954,7 +977,7 @@ def home(trip_id=None):
             'companions': request.form.get('companions')
         }
 
-        if validate_end_date(trip_data['start_date'], trip_data['end_date']) is True:
+        if check_valid_date(trip_data['start_date'], trip_data['end_date']) is True:
             if trip_id is not None:
                 if update_trip(trip_id, trip_data):
                     flash(f"Trip '{trip_data['trip_name']}' updated successfully!", 'success')
@@ -968,7 +991,7 @@ def home(trip_id=None):
             else:
                 flash('Error creating trip. Please try again.', 'error')
         else:
-            flash('End date cannot be before start date.', 'error')
+            flash('Error! End date cannot be before start date, or start date cannot be before today.', 'error')
         return redirect(url_for('home'))
 
     return render_template("home.html", trip_to_edit=trip_to_edit)
@@ -1125,7 +1148,7 @@ def add_hotel_route(trip_id, hotel_id=None):
             'description': request.form.get('description')
         }
 
-        if validate_end_date(hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
+        if check_valid_date(hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
             hotel_data['num_days'] = number_of_days(hotel_data['check_in_date'], hotel_data['check_out_date'])
 
             if hotel_id is not None:
@@ -1141,7 +1164,7 @@ def add_hotel_route(trip_id, hotel_id=None):
                 flash('Error adding hotel. Please try again.', 'error')
             return redirect(url_for('plan_trip', trip_id=trip_id))
         else:
-            flash('Check-out date cannot be before check-in date.', 'error')
+            flash('Error! Check-out date cannot be before check-in date, or check-in date cannot be before today.', 'error')
             return redirect(url_for('add_hotel_route', trip_id=trip_id, hotel_id=hotel_id))
         
     return render_template('add_hotel_route.html', trip_id=trip_id, trip=trip, hotels=hotels, hotel_to_edit=hotel_to_edit)
@@ -1249,7 +1272,7 @@ def add_flight_route(trip_id, flight_id=None):
             'description': request.form.get('description')
         }
 
-        if validate_end_date(flight_data['departure_date'], flight_data['arrival_date']) is True:
+        if check_valid_date(flight_data['departure_date'], flight_data['arrival_date']) is True:
             if flight_id is not None:
                 if update_flight(flight_id, flight_data):
                     flash(f"Flight '{flight_data['flight_number']}' updated successfully!", 'success')
@@ -1263,7 +1286,7 @@ def add_flight_route(trip_id, flight_id=None):
                 flash('Error adding flight. Please try again.', 'error')
             return redirect(url_for('plan_trip', trip_id=trip_id))
         else:
-            flash('Arrival date cannot be before departure date.', 'error')
+            flash('Error! Arrival date cannot be before departure date, or arrival date cannot be before today.', 'error')
             return redirect(url_for('add_flight_route', trip_id=trip_id, flight_id=flight_id))
     
     return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights, flight_to_edit=flight_to_edit)
@@ -1339,17 +1362,35 @@ def delete_extra_cost(extra_cost_id, trip_id):
     return redirect(url_for('plan_trip', trip_id=trip_id))
 
 # --- Methods ---
-def validate_end_date(start_date_str, end_date_str):
+def check_valid_date(start_date, end_date):
+    if validate_end_date(start_date, end_date) is True and check_day_after_today(start_date) is True:
+        return True
+    else:
+        return False
+
+def validate_end_date(start_date, end_date):
     """
     Validate that the end date is not before the start date.
-    :param start_date_str: Start date as a string
-    :param end_date_str: End date as a string
+    :param start_date_str: Start date as a string in YYYY-MM-DD format
+    :param end_date_str: End date as a string in YYYY-MM-DD format
     :return: Boolean indicating if the end date is valid
     """
     try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
         return end_date >= start_date
+    except ValueError:
+        return False
+
+def check_day_after_today(date_input):
+    """
+    Validate that the given date is either today or after today
+    :param date: String in YYYY-MM-DD format
+    :return: Boolean indicating if the given date is valid
+    """
+    try:
+        converted_date = datetime.strptime(date_input, '%Y-%m-%d').date()
+        return converted_date >= date.today()
     except ValueError:
         return False
 
@@ -1413,6 +1454,37 @@ def number_of_days(start_date_str, end_date_str):
         return delta.days
     except ValueError:
         return 0
+
+def get_available_forecast_dates(start_date, end_date):
+    """
+    Finds days between start_date and end_date with available weather information
+    :param start_date: Date as a string in YYYY-MM-DD format
+    :param end_date: Date as a string in YYYY-MM-DD format
+    :return: Date, Date indicating the start and end dates with available forecast, or None, indicating there are no days to with available forecast
+    """
+    max_forecast_days = 14
+
+    trip_start = datetime.strptime(start_date, "%Y-%m-%d").date()
+    trip_end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    today = datetime.today()
+    latest_forecast_date = today + timedelta(days=max_forecast_days)
+
+    # Entire trip is in the past
+    if trip_end < today:
+        return None
+
+    # Entire trip is too far in the future
+    if trip_start > latest_forecast_date:
+        return None
+    
+    # Don't request dates before today
+    forecast_start = max(trip_start, today)
+
+    # Don't request dates beyond the forecast range
+    forecast_end = min(trip_end, latest_forecast_date)
+
+    return forecast_start, forecast_end
 
 
 if __name__ == "__main__":
