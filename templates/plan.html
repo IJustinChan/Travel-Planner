@@ -48,194 +48,190 @@
 
     <br>
 
-    <div class="container">
-        <div class="display-container">
-            <h2>Summary of Budget for {{ trip['trip_name'] }}</h2>
-            <p><strong>Budget:</strong> ${{ trip['budget'] }}</p>
-            <p><strong>Total Expense:</strong> ${{ "%.2f"|format(all_costs['total_cost']) }} ({{ "%.0f"|format(all_costs['total_cost']/trip['budget'] * 100) }}% of your budget)</p>
-             {% if all_costs['total_cost'] > trip['budget'] %}
-                <p><strong class="caution-text">Warning:</strong> You have exceeded your budget by ${{ "%.2f"|format(all_costs['total_cost'] - trip['budget']) }}</p>
-            {% else %}
-                <p><strong>Remaining Budget:</strong> ${{ "%.2f"|format(trip['budget'] - all_costs['total_cost']) }}</p>
-            {% endif %}
-            <div class="budget-summary">
-                <p class="budget-summary-title"><strong>Expense Breakdown:</strong></p>
-                <ul class="budget-list">
-                    <li><span>Flights: </span><strong>${{ "%.2f"|format(all_costs['flights']) }}</strong></li>
-                    <li><span>Hotels: </span><strong>${{ "%.2f"|format(all_costs['hotels']) }}</strong></li>
-                    <li><span>Activities: </span><strong>${{ "%.2f"|format(all_costs['activities']) }}</strong></li>
-                    <li><span>Other Costs: </span><strong>${{ "%.2f"|format(all_costs['extra_costs']) }}</strong></li>
-                </ul>
-            </div>
+    <details open class="container display-container">
+        <summary>Summary of Budget for {{ trip['trip_name'] }}</summary>
+
+        <p><strong>Budget:</strong> ${{ trip['budget'] }}</p>
+        <p><strong>Total Expense:</strong> ${{ "%.2f"|format(all_costs['total_cost']) }} ({{ "%.0f"|format(all_costs['total_cost']/trip['budget'] * 100) }}% of your budget)</p>
+            {% if all_costs['total_cost'] > trip['budget'] %}
+            <p><strong class="caution-text">Warning:</strong> You have exceeded your budget by ${{ "%.2f"|format(all_costs['total_cost'] - trip['budget']) }}</p>
+        {% else %}
+            <p><strong>Remaining Budget:</strong> ${{ "%.2f"|format(trip['budget'] - all_costs['total_cost']) }}</p>
+        {% endif %}
+        <div class="budget-summary">
+            <p class="budget-summary-title"><strong>Expense Breakdown:</strong></p>
+            <ul class="budget-list">
+                <li><span>Flights: </span><strong>${{ "%.2f"|format(all_costs['flights']) }}</strong></li>
+                <li><span>Hotels: </span><strong>${{ "%.2f"|format(all_costs['hotels']) }}</strong></li>
+                <li><span>Activities: </span><strong>${{ "%.2f"|format(all_costs['activities']) }}</strong></li>
+                <li><span>Other Costs: </span><strong>${{ "%.2f"|format(all_costs['extra_costs']) }}</strong></li>
+            </ul>
         </div>
-    </div>
+
+    </details>
 
     <br>
 
-    <div class="container">
-        <section class="display-container">
-            <h2>Overview of {{ trip['trip_name'] }}</h2>
-            <div class="trips-grid">
-                <div class="trip-card">
-                    <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
-                    <p><strong>Dates:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
-                    <p><strong>Mode:</strong> {{ trip['travel_mode'] or 'General' }}</p>
-                    <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget'] or 0) }}</p>
-                    <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] or 1 }}</p>
-                    <p><strong>Companions:</strong> {{ trip['companions'] or 'None' }}</p>
-                    <p><strong>Notes:</strong> {{ trip['description'] or 'No additional notes' }}</p>
-                </div>
+    <details open class="container display-container">
+        <summary>Overview of {{ trip['trip_name'] }}</summary>
 
-                <div class="trip-card">
-                    <h3>Flights</h3>
-                    {% if flights %}
-                        <table class="info-table">
-                            <thead>
-                                <tr>
-                                    <th>Airline</th>
-                                    <th>Flight #</th>
-                                    <th>Departure</th>
-                                    <th>Arrival</th>
-                                    <th>Cost</th>
-                                    <th>Description</th>
-                                    <th>Edit</th>
-                                    <th>Delete</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for f in flights %}
-                                <tr>
-                                    <td>{{ f['airline'] }}</td>
-                                    <td>{{ f['flight_number'] }}</td>
-                                    <td>{{ f['departure_date'] }} {{ f['departure_time'] }}</td>
-                                    <td>{{ f['arrival_date'] }} {{ f['arrival_time'] }}</td>
-                                    <td>${{ "%.2f"|format(f['cost'] or 0) }}</td>
-                                    <td>{{ f['description'] or 'No description' }}</td>
-                                    <td>
-                                        <a class="edit-link" href="{{ url_for('add_flight_route', trip_id=trip['id'], flight_id=f['id']) }}">Edit</a>
-                                    </td>
-                                    <td>
-                                        <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}"
-                                        onclick="return confirm('Are you sure you want to delete this?');">Delete</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p>No flights have been entered for this trip.</p>
-                    {% endif %}
-                    <div class="form-actions" style="margin-top: 1rem;">
-                        <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_flight_route', trip_id=trip['id']) }}">Add Flight</a>
-                    </div>
-                </div>
-
-                <div class="trip-card">
-                    <h3>Accommodations</h3>
-                    {% if hotels %}
-                        <table class="info-table">
-                            <thead>
-                                <tr>
-                                    <th>Hotel Name</th>
-                                    <th>Address</th>
-                                    <th>Check-in</th>
-                                    <th>Check-out</th>
-                                    <th>Cost per day</th>
-                                    <th>Description</th>
-                                    <th>Edit</th>
-                                    <th>Delete</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for h in hotels %}
-                                <tr>
-                                    <td>{{ h['hotel_name'] }}</td>
-                                    <td>{{ h['location'] }}</td>
-                                    <td>{{ h['check_in_date'] }}</td>
-                                    <td>{{ h['check_out_date'] }}</td>
-                                    <td>${{ "%.2f"|format(h['cost_per_day'] or 0) }}</td>
-                                    <td>{{ h['description'] or 'No description' }}</td>
-                                    <td>
-                                        <a class="edit-link" href="{{ url_for('add_hotel_route', trip_id=trip['id'], hotel_id=h['id']) }}">Edit</a>
-                                    </td>
-                                    <td>
-                                        <a class="delete-link" href="{{ url_for('delete_hotel', hotel_id=h['id'], trip_id=trip['id']) }}"
-                                        onclick="return confirm('Are you sure you want to delete this?');">Delete</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p>No hotels have been entered for this trip.</p>
-                    {% endif %}
-                    <div class="form-actions" style="margin-top: 1rem;">
-                        <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_hotel_route', trip_id=trip['id']) }}">Add Hotel</a>
-                    </div>
-                </div>
-
+        <div class="trips-grid">
+            <div class="trip-card">
+                <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
+                <p><strong>Dates:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+                <p><strong>Mode:</strong> {{ trip['travel_mode'] or 'General' }}</p>
+                <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget'] or 0) }}</p>
+                <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] or 1 }}</p>
+                <p><strong>Companions:</strong> {{ trip['companions'] or 'None' }}</p>
+                <p><strong>Notes:</strong> {{ trip['description'] or 'No additional notes' }}</p>
             </div>
-            
-        </section>
-    </div>
-
-
-    <br>
-
-    <div class="container">
-        <div class="display-container">
-            <h2>Activities</h2>
 
             <div class="trip-card">
-                <h3>Planned Activities</h3>
-                <p>Here is where you can plan out activities to do on your trip such as places to visit, restaurants to eat at, events to take part in, and more!</p>
-                {% if activities %}
+                <h3>Flights</h3>
+                {% if flights %}
                     <table class="info-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Activity</th>
-                                <th>Type</th>
-                                <th>Time</th>
-                                <th>Location</th>
+                                <th>Airline</th>
+                                <th>Flight #</th>
+                                <th>Departure</th>
+                                <th>Arrival</th>
                                 <th>Cost</th>
-                                <th>Notes</th>
+                                <th>Description</th>
                                 <th>Edit</th>
-                                <th>Remove</th>
+                                <th>Delete</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for act in activities %}
+                            {% for f in flights %}
                             <tr>
-                                <td>{{ act['activity_date'] }}</td>
-                                <td>{{ act['activity_name'] }}</td>
-                                <td>{{ act['activity_type'] }}</td>
-                                <td>{{ act['activity_time'] }}</td>
-                                <td>{{ act['location'] }}</td>
-                                <td>${{ "%.2f"|format(act['cost']) }}</td>
-                                <td>{{ act['description'] }}</td>
-                                <td><a class="edit-link" href="{{ url_for('add_activity_route', trip_id=trip['id'], activity_id=act['id']) }}">Edit</a></td>
-                                <td><a class="delete-link" href="{{ url_for('delete_activity', activity_id=act['id'], trip_id=trip['id']) }}" onclick="return confirm('Are you sure you want to delete this activity?')">Remove</a></td>
+                                <td>{{ f['airline'] }}</td>
+                                <td>{{ f['flight_number'] }}</td>
+                                <td>{{ f['departure_date'] }} {{ f['departure_time'] }}</td>
+                                <td>{{ f['arrival_date'] }} {{ f['arrival_time'] }}</td>
+                                <td>${{ "%.2f"|format(f['cost'] or 0) }}</td>
+                                <td>{{ f['description'] or 'No description' }}</td>
+                                <td>
+                                    <a class="edit-link" href="{{ url_for('add_flight_route', trip_id=trip['id'], flight_id=f['id']) }}">Edit</a>
+                                </td>
+                                <td>
+                                    <a class="delete-link" href="{{ url_for('delete_flight', flight_id=f['id'], trip_id=trip['id']) }}"
+                                    onclick="return confirm('Are you sure you want to delete this?');">Delete</a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 {% else %}
-                    <p>No activities have been entered for this trip.</p>
+                    <p>No flights have been entered for this trip.</p>
                 {% endif %}
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_flight_route', trip_id=trip['id']) }}">Add Flight</a>
+                </div>
             </div>
 
-            <div class="form-actions" style="margin-top: 1rem;">
-                <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_activity_route', trip_id=trip['id']) }}">Add Activity</a>
+            <div class="trip-card">
+                <h3>Accommodations</h3>
+                {% if hotels %}
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Hotel Name</th>
+                                <th>Address</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Cost per day</th>
+                                <th>Description</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in hotels %}
+                            <tr>
+                                <td>{{ h['hotel_name'] }}</td>
+                                <td>{{ h['location'] }}</td>
+                                <td>{{ h['check_in_date'] }}</td>
+                                <td>{{ h['check_out_date'] }}</td>
+                                <td>${{ "%.2f"|format(h['cost_per_day'] or 0) }}</td>
+                                <td>{{ h['description'] or 'No description' }}</td>
+                                <td>
+                                    <a class="edit-link" href="{{ url_for('add_hotel_route', trip_id=trip['id'], hotel_id=h['id']) }}">Edit</a>
+                                </td>
+                                <td>
+                                    <a class="delete-link" href="{{ url_for('delete_hotel', hotel_id=h['id'], trip_id=trip['id']) }}"
+                                    onclick="return confirm('Are you sure you want to delete this?');">Delete</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No hotels have been entered for this trip.</p>
+                {% endif %}
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_hotel_route', trip_id=trip['id']) }}">Add Hotel</a>
+                </div>
             </div>
+
         </div>
-    </div>
+
+    </details>
 
     <br>
 
-    <div class="container">
-        <div class="display-container">
-            <h2>Extra Costs</h2>
+    <details open class="container display-container">
+        <summary>Activities</summary>
+
+        <div class="trip-card">
+            <h3>Planned Activities</h3>
+            <p>Here is where you can plan out activities to do on your trip such as places to visit, restaurants to eat at, events to take part in, and more!</p>
+            {% if activities %}
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Activity</th>
+                            <th>Type</th>
+                            <th>Time</th>
+                            <th>Location</th>
+                            <th>Cost</th>
+                            <th>Notes</th>
+                            <th>Edit</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for act in activities %}
+                        <tr>
+                            <td>{{ act['activity_date'] }}</td>
+                            <td>{{ act['activity_name'] }}</td>
+                            <td>{{ act['activity_type'] }}</td>
+                            <td>{{ act['activity_time'] }}</td>
+                            <td>{{ act['location'] }}</td>
+                            <td>${{ "%.2f"|format(act['cost']) }}</td>
+                            <td>{{ act['description'] }}</td>
+                            <td><a class="edit-link" href="{{ url_for('add_activity_route', trip_id=trip['id'], activity_id=act['id']) }}">Edit</a></td>
+                            <td><a class="delete-link" href="{{ url_for('delete_activity', activity_id=act['id'], trip_id=trip['id']) }}" onclick="return confirm('Are you sure you want to delete this activity?')">Remove</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No activities have been entered for this trip.</p>
+            {% endif %}
+        </div>
+
+        <div class="form-actions" style="margin-top: 1rem;">
+            <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_activity_route', trip_id=trip['id']) }}">Add Activity</a>
+        </div>
+
+    </details>
+
+    <br>
+
+    <details open class="container display-container">
+        <summary>Extra Costs</summary>
 
             <div class="trip-card">
                 <p>Add some extra costs that occurred during your trip such as groceries, transportation, shopping, and more.</p>
@@ -271,8 +267,7 @@
                 <a class="btn btn-primary inline-action-btn" href="{{ url_for('add_extra_cost_route', trip_id=trip['id']) }}">Add Extra Cost</a>
             </div>
 
-        </div>
-    </div>    
+    </details>
 
     <br>
 

@@ -572,3 +572,11 @@ main {
     display: inline-block;
     transition: all 0.3s ease;
 }
+
+summary {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    color: var(--text-dark);
+    font-weight: bold;
+    cursor: pointer;
+}
