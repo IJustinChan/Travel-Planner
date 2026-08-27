@@ -910,10 +910,11 @@ def delete_extra_cost_record(trip_id, extra_cost_id):
         return False
 
 # --- Delete All Weather Info for a Trip ---
-def delete_trip_weather_info(trip_id):
+def delete_trip_weather_info(trip_id, cutoff_date):
     """
-    Delete all weather information for all days associated with a specific trip
+    Delete all weather information for all days associated with a specific trip that is after cutoff_date
     :param trip_id: ID of the trip
+    :param cutoff_date: Represents a string date in YYYY-MM-DD
     :return: Boolean indicating success or failure
     """
     try:
@@ -924,7 +925,9 @@ def delete_trip_weather_info(trip_id):
                 WeatherInfo
             WHERE
                 trip_id = ?
-        ''', (trip_id,))
+            AND
+                weather_date < ?
+        ''', (trip_id, cutoff_date))
         connection.commit()
         connection.close()
         return True
@@ -1565,7 +1568,8 @@ def store_weather_for_trip(trip_id, city, country, start_date, end_date):
     if trip_id is None or not city or not start_date or not end_date:
         return False
 
-    delete_trip_weather_info(trip_id) # Remove any pre-existing information
+    # Remove any pre-existing information in the future that could still be updated
+    delete_trip_weather_info(trip_id, date.today().isoformat())
 
     forecast_window = get_available_forecast_dates(start_date, end_date)
     weather_lookup = {}
@@ -1595,7 +1599,7 @@ def store_weather_for_trip(trip_id, city, country, start_date, end_date):
 
     trip_start = datetime.strptime(start_date, '%Y-%m-%d').date()
     trip_end = datetime.strptime(end_date, '%Y-%m-%d').date()
-    current_date = trip_start
+    current_date = max(trip_start, date.today())
 
     while current_date <= trip_end:
         weather_key = current_date.isoformat()
