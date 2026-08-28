@@ -182,7 +182,7 @@ def add_trip(trip_data):
     """
     Save a new trip to the database and returns true if successful, false otherwise.
     Also calls weather api to get weather information and save those data into the database.
-    This function works on this additional task because it has access to the id of the trip, which by default is set to autoincrement
+    This function works on this additional task because it has access to the id of the latest trip, which by default is set to autoincrement
     :param trip_data: Dictionary containing trip information
     :return: Boolean indicating success or failure
     """
@@ -812,6 +812,33 @@ def update_weather_info(weather_info_id, new_weather_data):
         print(f"Error updating weather information: {e}")
         return False
 
+def update_trip_weather_date(trip_id, new_weather_date):
+    """
+    Changes the weather_updated_at column in TripInfo to new_weather_date
+    :param trip_id: ID of the trip
+    :param new_weather_date: New date as a string in YYYY-MM-DD format
+    :return: Boolean indicating success or failure
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        cursor = connection.cursor()
+        cursor.execute('''
+            UPDATE 
+                TripInfo 
+            SET 
+                weather_updated_at = ?
+            WHERE 
+                id = ?''', (
+                    new_weather_date,
+                    trip_id
+                ))
+        connection.commit()
+        connection.close()
+        return True
+    except Exception as e:
+        print(f"Error updating trip: {e}")
+        return False
+
 # --- Delete Database Information Of Single Rows ---
 def delete_flight_record(trip_id, flight_id):
     """
@@ -926,7 +953,7 @@ def delete_trip_weather_info(trip_id, cutoff_date):
             WHERE
                 trip_id = ?
             AND
-                weather_date < ?
+                weather_date >= ?
         ''', (trip_id, cutoff_date))
         connection.commit()
         connection.close()
@@ -1001,7 +1028,7 @@ def home(trip_id=None):
                     try:
                         store_weather_for_trip(trip_id, trip_data.get('destination'), trip_data.get('country'), trip_data.get('start_date'), trip_data.get('end_date'))
                     except Exception as e:
-                        print(f"Error retrieving weather for trip: {e}")
+                        print(f"Error updating weather for trip: {e}")
 
                     flash(f"Trip '{trip_data['trip_name']}' updated successfully!", 'success')
                 else:
@@ -1043,10 +1070,6 @@ def plan_trip(trip_id):
         if trip is None:
             flash('Trip not found.', 'error')
             return redirect(url_for('view_trips'))
-        
-        # Updates weather information at the end of every day
-        if check_date_in_past(trip['weather_updated_at']):
-            store_weather_for_trip(trip['id'], trip['destination'], trip['country'], trip['start_date'], trip['end_date'])
 
         # Fetch related data
         activities = get_activities(trip_id)
@@ -1337,12 +1360,13 @@ def trip_weather(trip_id):
         # Updates weather information at the end of every day
         if check_date_in_past(trip['weather_updated_at']):
             store_weather_for_trip(trip['id'], trip['destination'], trip['country'], trip['start_date'], trip['end_date'])
-        
+            update_trip_weather_date(trip_id, date.today().isoformat())
+
         weather_info = get_weather_info(trip_id)
 
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
-        flash('Error loading add flight page.', 'error')
+        flash('Error loading weather information page.', 'error')
         return redirect(url_for('view_trips'))
 
     return render_template('weather_forecasts.html', trip=trip, trip_id=trip_id, weather_info=weather_info)
@@ -1485,6 +1509,20 @@ def check_date_in_past(date_input):
         return converted_date < date.today()
     except ValueError:
         return False
+
+def check_date_during_trip(start_date, end_date, date_input):
+    """
+    Validates that date_input is between start_date and end_date (inclusive)
+    :param start_date: String in YYYY-MM-DD format
+    :param end_date: String in YYYY-MM-DD format
+    :param date_input: String in YYYY-MM-DD format
+    :return: Boolean indicating if date_input is within the start and end dates
+    """
+    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+
+    return start_date <= date_input <= end_date
 
 def calculate_total_event_cost(event_list):
     """
