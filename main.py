@@ -1137,6 +1137,10 @@ def add_activity_route(trip_id, activity_id=None):
             'cost': request.form.get('cost')
         }
 
+        if check_date_during_trip(trip['start_date'], trip['end_date'], activity_data['activity_date']) is False:
+            flash(f"Error! Please ensure the activity date is during the trip.", 'error')
+            return redirect(url_for('add_activity_route', trip_id=trip_id, activity_id=activity_id))
+
         if activity_id is not None:
             if update_activity(activity_id, activity_data):
                 flash(f"Activity '{activity_data['activity_name']}' updated successfully!", 'success')
@@ -1259,6 +1263,10 @@ def add_extra_cost_route(trip_id, extra_cost_id=None):
             'date': request.form.get('date'),
             'description': request.form.get('description')
         }
+
+        if check_date_during_trip(trip['start_date'], trip['end_date'], extra_cost_data['date']) is False:
+            flash(f"Error! Please ensure the extra cost date is during the trip.", 'error')
+            return redirect(url_for('add_extra_cost_route', trip_id=trip_id, extra_cost_id=extra_cost_id))
 
         if extra_cost_id is not None:
             if update_extra_cost(extra_cost_id, extra_cost_data):
