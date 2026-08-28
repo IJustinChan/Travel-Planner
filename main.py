@@ -1347,6 +1347,30 @@ def trip_weather(trip_id):
 
     return render_template('weather_forecasts.html', trip=trip, trip_id=trip_id, weather_info=weather_info)
 
+@app.route('/chatbot/<int:trip_id>', methods=['GET', 'POST'])
+def planner_chatbot(trip_id):
+    """
+    Allows users to interact with Gemini to help them plan their trip
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+
+    except Exception as e:
+        print(f"Error loading trip for chatbot: {e}")
+        flash('Error loading chatbot page.', 'error')
+        return redirect(url_for('view_trips'))
+
+    return render_template('chatbot.html', trip_id=trip_id, trip=trip)
+
 # --- Delete Routes ---
 @app.route('/delete_trip/<int:trip_id>')
 def delete_trip(trip_id):

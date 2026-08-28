@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Gemini Chatbot for {{ trip['trip_name'] }}</h1>
+            <p>Use Google's Gemini to help you plan your trip!</p>
+            <p>This chatbot uses your trip details, such as your budget, hotels, flights, and activities, to deliver personalized recommendations and advice.</p>
+        </div>
+    </header>
+
+    <br>
+    
+</body>
+</html>

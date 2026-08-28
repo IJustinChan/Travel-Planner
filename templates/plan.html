@@ -42,8 +42,15 @@
         {% endwith %}
 
         <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('planner_chatbot', trip_id=trip['id']) }}">Use Gemini Chatbot To Help Plan Trip</a>
+        </div>
+
+        <br>
+
+        <div class="form-actions">
             <a class="btn btn-secondary" href="{{ url_for('trip_weather', trip_id=trip['id']) }}">View Weather Forecast for this Trip</a>
         </div>
+        
     </div>
 
     <br>
