@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Chatbot</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
 <body>
     <nav class="navbar">
@@ -20,12 +21,36 @@
     <header class="hero">
         <div class="container">
             <h1>Gemini Chatbot for {{ trip['trip_name'] }}</h1>
-            <p>Use Google's Gemini to help you plan your trip!</p>
-            <p>This chatbot uses your trip details, such as your budget, hotels, flights, and activities, to deliver personalized recommendations and advice.</p>
+            <h2>{{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</h2>
+            <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
         </div>
     </header>
 
+    <div class="container">
+        <p>Use Google's Gemini to help you plan your trip!</p>
+        <p>This chatbot uses your trip details, such as your budget, hotels, flights, and activities, to deliver personalized recommendations.</p>
+        <div class="chat-container">
+            <div class="chat-header">Trip planning assistant</div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="message bot">Hi! Ask me anything about your trip, budget, flights, hotels, activities, or extra costs.</div>
+            </div>
+            <form id="chatForm" class="chat-form">
+                <input id="tripId" type="hidden" value="{{ trip_id }}">
+                <input id="messageInput" type="text" placeholder="Type your message..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
     <br>
-    
+
+    <div class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('plan_trip', trip_id=trip_id) }}">Return to Trip Planning</a>
+        </div>
+    </div>
+
+    <footer class="footer"></footer>
+
 </body>
 </html>
