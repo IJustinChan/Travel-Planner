@@ -11,6 +11,11 @@ A full-stack travel planning web application that helps users organize trips by 
 * Provide an AI travel assistant powered by the Gemini API that uses saved trip information to answer trip-specific questions
 
 ## Screenshots
+### Creating a New Trip
+<img src="images/create_trip.png" height="600">
+
+### AI Travel Assistant
+![Image](images/a_chatbot3.png)
 
 ## Technologies Used
 * Python
@@ -37,17 +42,20 @@ cd Travel-Planner
 pip install -r requirements.txt
 ```
 
-First, run `pip install -r requirements.txt` to install the required libraries. 
-
 ## Gemini Api Key Setup
 This project uses the Gemini API for the AI travel assistant. You will need to get your own Gemini API key before running the application.
 
 Please visit Google AI Studio and use your Google Account to generate your own Gemini API key: https://aistudio.google.com/
 
+Next, copy and paste your API key into line 16 of `main.py`:
+```
+client = genai.Client(api_key="YOUR_API_KEY_HERE")
+```
+
 Do not commit API keys to the repository.
 
 ## Running the Program
-Start the Flask application by running `main.py`. Click the link that is generated and you will be able to access the application. 
+Once you have added your API key, start the Flask application by running `main.py`. Click the link that is generated and you will be able to access the website. 
 
 ## Project Structure
 ```
