@@ -13,7 +13,7 @@ app.secret_key = 'travel_planner_secret_key' # For flash messages
 
 # Gemini API variables
 chat_history = []
-client = genai.Client(api_key="AQ.Ab8RN6Kfg482nJWm7h6ICp-xDfiFVww8tFFUmMT7FDPVgU_7gA")
+client = genai.Client(api_key="YOUR_API_KEY_HERE")
 
 # --- Database Setup ---
 def set_up_database():
