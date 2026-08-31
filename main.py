@@ -11,6 +11,10 @@ from weather_information import get_weather
 app = Flask(__name__) # Create the flask app
 app.secret_key = 'travel_planner_secret_key' # For flash messages
 
+# Gemini API variables
+chat_history = []
+client = genai.Client(api_key="AQ.Ab8RN6Kfg482nJWm7h6ICp-xDfiFVww8tFFUmMT7FDPVgU_7gA")
+
 # --- Database Setup ---
 def set_up_database():
     """
@@ -411,7 +415,8 @@ def get_activities(trip_id):
             WHERE 
                 trip_id = ? 
             ORDER BY 
-                activity_date ASC''', (trip_id,)).fetchall()
+                activity_date ASC,
+                activity_time ASC''', (trip_id,)).fetchall()
         connection.close()
         return activities
     except Exception as e:
@@ -1022,7 +1027,7 @@ def home(trip_id=None):
             'companions': request.form.get('companions')
         }
 
-        if check_valid_date(trip_data['start_date'], trip_data['end_date']) is True:
+        if check_valid_trip_date(trip_data['start_date'], trip_data['end_date']) is True:
             if trip_id is not None:
                 if update_trip(trip_id, trip_data):
                     # Add new weather information
@@ -1087,11 +1092,12 @@ def plan_trip(trip_id):
             'total_cost': calculate_overall_cost(trip_id)
         }
 
-        return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
         flash('Error loading trip.', 'error')
         return redirect(url_for('view_trips'))
+    
+    return render_template('plan.html', trip=trip, trip_id= trip_id, activities=activities, hotels=hotels, flights=flights, extra_costs=extra_costs, all_costs=all_costs)
     
 @app.route('/add_activity_route/<int:trip_id>', methods=['GET', 'POST'])
 @app.route('/add_activity_route/<int:trip_id>/<int:activity_id>', methods=['GET', 'POST'])
@@ -1201,8 +1207,8 @@ def add_hotel_route(trip_id, hotel_id=None):
             'num_days': request.form.get('num_days'),
             'description': request.form.get('description')
         }
-
-        if check_valid_date(hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
+        
+        if check_valid_hotel_dates(trip['start_date'], trip['end_date'], hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
             hotel_data['num_days'] = number_of_days(hotel_data['check_in_date'], hotel_data['check_out_date'])
 
             if hotel_id is not None:
@@ -1315,7 +1321,7 @@ def add_flight_route(trip_id, flight_id=None):
     except Exception as e:
         print(f"Error loading trip for planning: {e}")
         flash('Error loading add flight page.', 'error')
-        return redirect(url_for('view_trips'))
+        return redirect(url_for('plan_trip', trip_id=trip_id))
 
     if request.method == 'POST':
         flight_data = {
@@ -1329,8 +1335,8 @@ def add_flight_route(trip_id, flight_id=None):
             'cost': request.form.get('cost'),
             'description': request.form.get('description')
         }
-
-        if check_valid_date(flight_data['departure_date'], flight_data['arrival_date']) is True:
+        
+        if check_valid_flight_dates(trip['start_date'], trip['end_date'], flight_data['departure_date'], flight_data['arrival_date']) is True:
             if flight_id is not None:
                 if update_flight(flight_id, flight_data):
                     flash(f"Flight '{flight_data['flight_number']}' updated successfully!", 'success')
@@ -1344,7 +1350,7 @@ def add_flight_route(trip_id, flight_id=None):
                 flash('Error adding flight. Please try again.', 'error')
             return redirect(url_for('plan_trip', trip_id=trip_id))
         else:
-            flash('Error! Arrival date cannot be before departure date, or arrival date cannot be before today.', 'error')
+            flash('Error! Arrival date cannot be before departure date, and dates must fall during the trip date period.', 'error')
             return redirect(url_for('add_flight_route', trip_id=trip_id, flight_id=flight_id))
     
     return render_template('add_flight_route.html', trip_id=trip_id, trip=trip, flights=flights, flight_to_edit=flight_to_edit)
@@ -1352,7 +1358,7 @@ def add_flight_route(trip_id, flight_id=None):
 @app.route('/weather_forecasts/<int:trip_id>', methods=['GET', 'POST'])
 def trip_weather(trip_id):
     """
-    Shows the weather forecast for days during the trip
+    Shows the weather forecast for days during a specific trip
     """
     try:
         connection = sqlite3.connect(database_name)
@@ -1379,6 +1385,32 @@ def trip_weather(trip_id):
         return redirect(url_for('view_trips'))
 
     return render_template('weather_forecasts.html', trip=trip, trip_id=trip_id, weather_info=weather_info)
+
+@app.route('/itinerary/<int:trip_id>', methods=['GET', 'POST'])
+def view_itinerary(trip_id):
+    """
+    Displays a detailed itinerary for a specific trip
+    """
+    try:
+        connection = sqlite3.connect(database_name)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM TripInfo WHERE id = ?', (trip_id,))
+        trip = cursor.fetchone()
+        connection.close()
+
+        if trip is None:
+            flash('Trip not found.', 'error')
+            return redirect(url_for('view_trips'))
+        
+        itinerary_groups = build_itinerary(trip_id)
+
+    except Exception as e:
+        print(f"Error loading itinerary: {e}")
+        flash('Error loading itinerary.', 'error')
+        return redirect(url_for('plan_trip', trip_id=trip_id))
+
+    return render_template('itinerary.html', trip=trip, trip_id=trip_id, itinerary_groups=itinerary_groups)
 
 @app.route('/chatbot/<int:trip_id>', methods=['GET', 'POST'])
 def planner_chatbot(trip_id):
@@ -1490,8 +1522,36 @@ def delete_extra_cost(extra_cost_id, trip_id):
     return redirect(url_for('plan_trip', trip_id=trip_id))
 
 # --- Methods ---
-def check_valid_date(start_date, end_date):
+def check_valid_trip_date(start_date, end_date):
     if validate_end_date(start_date, end_date) is True and check_date_after_today(start_date) is True:
+        return True
+    else:
+        return False
+
+def check_valid_flight_dates(start_date, end_date, start_date_input, end_date_input):
+    """
+    Validate that both start_date_input and end_date_input is between start_date and end_date
+    :param start_date: String in YYYY-MM-DD format
+    :param end_date: String in YYYY-MM-DD format
+    :param start_date_input: String in YYYY-MM-DD format
+    :param end_date_input: String in YYYY-MM-DD format
+    :return: Boolean indicating if the requirements are satisfied
+    """
+    if check_date_during_trip(start_date, end_date, start_date_input) is True and check_date_during_trip(start_date, end_date, end_date_input) is True:
+        return True
+    else:
+        return False
+    
+def check_valid_hotel_dates(start_date, end_date, start_date_input, end_date_input):
+    """
+    Validate that the end_date_input is after start_date_input and that both start_date_input and end_date_input is between start_date and end_date
+    :param start_date: String in YYYY-MM-DD format
+    :param end_date: String in YYYY-MM-DD format
+    :param start_date_input: String in YYYY-MM-DD format
+    :param end_date_input: String in YYYY-MM-DD format
+    :return: Boolean indicating if the requirements are satisfied
+    """
+    if validate_end_date(start_date_input, end_date_input) is True and check_date_during_trip(start_date, end_date, start_date_input) is True and check_date_during_trip(start_date, end_date, end_date_input) is True:
         return True
     else:
         return False
@@ -1499,8 +1559,8 @@ def check_valid_date(start_date, end_date):
 def validate_end_date(start_date, end_date):
     """
     Validate that the end date is not before the start date.
-    :param start_date_str: Start date as a string in YYYY-MM-DD format
-    :param end_date_str: End date as a string in YYYY-MM-DD format
+    :param start_date: Start date as a string in YYYY-MM-DD format
+    :param end_date: End date as a string in YYYY-MM-DD format
     :return: Boolean indicating if the end date is valid
     """
     try:
@@ -1704,11 +1764,84 @@ def store_weather_for_trip(trip_id, city, country, start_date, end_date):
 
     return True
 
+def build_itinerary(trip_id):
+    """Build a date-grouped itinerary with hotels, flights, and activities."""
+    trip = get_single_trip(trip_id)
+    if trip is None:
+        return []
+
+    activities = get_activities(trip_id)
+    hotels = get_hotels(trip_id)
+    flights = get_flights(trip_id)
+
+    entries = []
+
+    for hotel in hotels:
+        entries.append({
+            'date': hotel['check_in_date'],
+            'sort_time': '0:00',
+            'category': 'Hotel',
+            'title': hotel['hotel_name'],
+            'time': f"Check-in: {hotel['check_in_date']}",
+            'details': f"Location: {hotel['location'] or 'Not provided'} | Cost/day: ${float(hotel['cost_per_day'] or 0):.2f} | Nights: {hotel['num_days'] or 0} | {hotel['description'] or 'No notes'}",
+        })
+        entries.append({
+            'date': hotel['check_out_date'],
+            'sort_time': '0:00',
+            'category': 'Hotel',
+            'title': hotel['hotel_name'],
+            'time': f"Check-out: {hotel['check_out_date']}",
+            'details': f"Location: {hotel['location'] or 'Not provided'} | Cost/day: ${float(hotel['cost_per_day'] or 0):.2f} | Nights: {hotel['num_days'] or 0} | {hotel['description'] or 'No notes'}",
+        })
+
+    for flight in flights:
+        entries.append({
+            'date': flight['departure_date'],
+            'sort_time': flight['departure_time'],
+            'category': 'Flight',
+            'title': f"{flight['airline']} {flight['flight_number']}",
+            'time': f"Departure: {flight['departure_time'] or 'N/A'}",
+            'details': f"Flight from {flight['departure_date']} to {flight['arrival_date']} | Total Cost: ${float(flight['cost'] or 0):.2f} | {flight['description'] or 'No notes'}",
+        })
+        entries.append({
+            'date': flight['arrival_date'],
+            'sort_time': flight['arrival_time'],
+            'category': 'Flight',
+            'title': f"{flight['airline']} {flight['flight_number']}",
+            'time': f"Arrival: {flight['arrival_time'] or 'N/A'}",
+            'details': f"Flight from {flight['departure_date']} to {flight['arrival_date']} | Total Cost: ${float(flight['cost'] or 0):.2f} | {flight['description'] or 'No notes'}",
+        })
+
+    for activity in activities:
+        entries.append({
+            'date': activity['activity_date'],
+            'sort_time': activity['activity_time'],
+            'category': 'Activity',
+            'title': activity['activity_name'],
+            'time': activity['activity_time'] or 'Time not set',
+            'details': f"Type: {activity['activity_type'] or 'General'} | Location: {activity['location'] or 'Not provided'} | Cost: ${float(activity['cost'] or 0):.2f} | {activity['description'] or 'No notes'}",
+        })
+
+    entries.sort(
+        key=lambda item: datetime.strptime(
+            item["date"] + " " + item["sort_time"],
+            "%Y-%m-%d %H:%M"
+        )
+    )
+
+    grouped = {}
+
+    for item in entries:
+        date = item["date"]
+
+        if date not in grouped:
+            grouped[date] = []
+
+        grouped[date].append(item)
+
+    return grouped
 
 # --- Gemini API Chatbot ---
-chat_history = []
-client = genai.Client(api_key="YOUR_API_KEY")
-
 def generate_trip_summary(trip_data):
     """
     Generates a summary of the trip

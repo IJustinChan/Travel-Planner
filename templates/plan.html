@@ -50,6 +50,12 @@
         <div class="form-actions">
             <a class="btn btn-secondary" href="{{ url_for('trip_weather', trip_id=trip['id']) }}">View Weather Forecast for this Trip</a>
         </div>
+
+        <br>
+
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('view_itinerary', trip_id=trip['id']) }}">View Itinerary</a>
+        </div>
         
     </div>
 

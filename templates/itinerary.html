@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary - {{ trip['trip_name'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">✈️ Travel Planner</div>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}">Add Trip</a></li>
+                <li><a href="{{ url_for('view_trips') }}">View Trips</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>{{ trip['trip_name'] }} Itinerary</h1>
+            <h2>{{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</h2>
+            <p>{{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+            <br>
+            <a class="btn edit-button" href="{{ url_for('home', trip_id=trip['id']) }}">Edit Trip Information</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('plan_trip', trip_id=trip_id) }}">Return to Trip Planning</a>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="container">
+        <div class="display-container">
+            <h2>Itinerary</h2>
+
+            {% if itinerary_groups %}
+                {% for date, items in itinerary_groups.items() %}
+                    <div class="itinerary-day trip-card">
+                        <h3>{{ date }}</h3>
+
+                        {% for item in items %}
+                            <div class="itinerary-event">
+                                <div class="itinerary-badge">{{ item['category'] }}</div>
+                                <div class="itinerary-content">
+                                    <strong> {{ item['title'] }} </strong>
+                                    <p><em>{{ item['time'] }}</em></p>
+                                    <p>{{ item['details'] }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                {% endfor %}
+            {% else %}
+                <p>No itinerary items found for this trip yet.</p>
+                <p>You can add flights, hotels, and activities, and they will show up here!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="footer"></footer>
+
+</body>
+</html>

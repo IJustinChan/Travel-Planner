@@ -15,7 +15,7 @@ A full-stack travel planning web application that helps users organize trips by 
 <img src="images/create_trip.png" height="800">
 
 ### AI Travel Assistant
-![Image](images/chatbot_screenshot.png)
+<img src="images/chatbot_screenshot.png" height="400">
 
 ## Technologies Used
 * Python
