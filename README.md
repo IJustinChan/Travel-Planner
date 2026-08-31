@@ -6,9 +6,10 @@ A full-stack travel planning web application that helps users organize trips by 
 * Create, view, edit, and delete trips through a full-stack web interface
 * Organize flights, hotels, activities, and additional expenses for each trip
 * Track key trip details including destination, travel dates, budget, travelers, and notes
+* View a day-by-day itinerary that organizes flights, hotels, and activities in chronological order
 * Persist trip data with SQLite, allowing information to be saved and retrieved across application sessions
-* View available weather forecasts for upcoming trips using data from Open-Mateo Weather API
-* Provide an AI travel assistant powered by the Gemini API that uses saved trip information to answer trip-specific questions
+* Display available upcoming weather forecasts using the Open-Meteo API
+* Use an AI travel assistant powered by the Gemini API that utilizes saved trip information to answer trip-specific questions
 
 ## Screenshots
 ### Creating a New Trip
