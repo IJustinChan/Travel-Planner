@@ -4,8 +4,8 @@ import pathlib
 import sqlite3
 from datetime import datetime, timedelta, date
 import pathlib
-from google import genai
 
+from google import genai
 from weather_information import get_weather
 
 app = Flask(__name__) # Create the flask app
@@ -2109,9 +2109,6 @@ if __name__ == "__main__":
 
     app.run(debug=True) # Run the flask app
 
-
-# Uncomment this if you want to run the file chatbot_gemini.py
-# database_name = 'trips.db'
 
 
 

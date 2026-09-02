@@ -46,7 +46,7 @@ cd Travel-Planner
 pip install -r requirements.txt
 ```
 
-## Gemini Api Key Setup
+## Gemini API Key Setup
 This project uses the Gemini API for the AI travel assistant. You will need to get your own Gemini API key before running the application.
 
 Please visit Google AI Studio and use your Google Account to generate your own Gemini API key: https://aistudio.google.com/
