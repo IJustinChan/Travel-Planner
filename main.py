@@ -1027,6 +1027,10 @@ def home(trip_id=None):
             'companions': request.form.get('companions')
         }
 
+        if is_positive_integer(trip_data['num_travelers']) is False or is_positive_number(trip_data['budget']) is False:
+            flash('Error! You entered non-integer for number of travelers or you entered non-number for budget.', 'error')
+            return redirect(url_for('home'))
+
         if check_valid_trip_date(trip_data['start_date'], trip_data['end_date']) is True:
             if trip_id is not None:
                 if update_trip(trip_id, trip_data):
@@ -1144,6 +1148,10 @@ def add_activity_route(trip_id, activity_id=None):
             'cost': request.form.get('cost')
         }
 
+        if is_positive_number(activity_data['cost']) is False:
+            flash("Error! Please enter a number for the cost.", "error")
+            return redirect(url_for('add_activity_route', trip_id=trip_id, activity_id=activity_id))
+
         if check_date_during_trip(trip['start_date'], trip['end_date'], activity_data['activity_date']) is False:
             flash(f"Error! Please ensure the activity date is during the trip.", 'error')
             return redirect(url_for('add_activity_route', trip_id=trip_id, activity_id=activity_id))
@@ -1204,9 +1212,12 @@ def add_hotel_route(trip_id, hotel_id=None):
             'check_out_date': request.form.get('check_out_date'),
             'location': request.form.get('location'),
             'cost_per_day': request.form.get('cost_per_day'),
-            'num_days': request.form.get('num_days'),
             'description': request.form.get('description')
         }
+
+        if is_positive_number(hotel_data['cost_per_day']) is False:
+            flash("Error! You must enter number for cost and you must enter positive integer for number of days.", 'error')
+            return redirect(url_for('add_hotel_route', trip_id=trip_id, hotel_id=hotel_id))
         
         if check_valid_hotel_dates(trip['start_date'], trip['end_date'], hotel_data['check_in_date'], hotel_data['check_out_date']) is True:
             hotel_data['num_days'] = number_of_days(hotel_data['check_in_date'], hotel_data['check_out_date'])
@@ -1270,6 +1281,10 @@ def add_extra_cost_route(trip_id, extra_cost_id=None):
             'date': request.form.get('date'),
             'description': request.form.get('description')
         }
+
+        if is_positive_number(extra_cost_data['cost']) is False:
+            flash("Error! You must enter positive number for the cost.", 'error')
+            return redirect(url_for('add_extra_cost_route', trip_id=trip_id, extra_cost_id=extra_cost_id))
 
         if check_date_during_trip(trip['start_date'], trip['end_date'], extra_cost_data['date']) is False:
             flash(f"Error! Please ensure the extra cost date is during the trip.", 'error')
@@ -1335,6 +1350,10 @@ def add_flight_route(trip_id, flight_id=None):
             'cost': request.form.get('cost'),
             'description': request.form.get('description')
         }
+
+        if is_positive_number(flight_data['cost']) is False:
+            flash("Error! You must enter a positive number for the cost.", 'error')
+            return redirect(url_for('add_flight_route', trip_id=trip_id, flight_id=flight_id))
         
         if check_valid_flight_dates(trip['start_date'], trip['end_date'], flight_data['departure_date'], flight_data['arrival_date']) is True:
             if flight_id is not None:
@@ -1653,6 +1672,34 @@ def calculate_overall_cost(trip_id):
     except Exception as e:
         print(f"Error calculating total cost: {e}")
         return 0.0
+
+def is_positive_integer(integer):
+    """
+    Checks if given input is a positive integer
+    :param integer: int
+    :return: Boolean
+    """
+    try:
+        integer = int(integer)
+        if integer >= 0:
+            return True
+        return False
+    except ValueError:
+        return False
+
+def is_positive_number(number):
+    """
+    Checks if given input is a positive number
+    :param number: float
+    :return: Boolean
+    """
+    try:
+        number = float(number)
+        if number >= 0:
+            return True
+        return False
+    except ValueError:
+        return False
 
 def number_of_days(start_date_str, end_date_str):
     """

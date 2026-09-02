@@ -8,8 +8,8 @@ A full-stack travel planning web application that helps users organize trips by 
 * Track key trip details including destination, travel dates, budget, travelers, and notes
 * View a day-by-day itinerary that organizes flights, hotels, and activities in chronological order
 * Persist trip data with SQLite, allowing information to be saved and retrieved across application sessions
-* Display available upcoming weather forecasts using the Open-Meteo API
-* Use an AI travel assistant powered by the Gemini API that utilizes saved trip information to answer trip-specific questions
+* Display available upcoming weather forecasts using Open-Meteo Weather API
+* Use an AI travel assistant powered by Google Gemini API that utilizes saved trip information to answer trip-specific questions
 
 ## Screenshots
 ### Creating a New Trip
@@ -53,7 +53,7 @@ Next, copy and paste your API key into line 16 of `main.py`:
 client = genai.Client(api_key="YOUR_API_KEY_HERE")
 ```
 
-Do not commit API keys to the repository.
+**Warning**: Do not commit API keys to the repository.
 
 ## Running the Program
 Once you have added your API key, start the Flask application by running `main.py`. Click the link that is generated and you will be able to access the website. 
