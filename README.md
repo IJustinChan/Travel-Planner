@@ -13,10 +13,13 @@ A full-stack travel planning web application that helps users organize trips by 
 
 ## Screenshots
 ### Creating a New Trip
-<img src="images/create_trip.png" height="800">
+<img src="images/create_trip.png" height="700">
+
+### Viewing Itinerary
+<img src="images/itinerary.png" height="600">
 
 ### AI Travel Assistant
-<img src="images/chatbot_screenshot.png" height="450">
+<img src="images/chatbot_demo.png">
 
 ## Technologies Used
 * Python
@@ -30,7 +33,7 @@ A full-stack travel planning web application that helps users organize trips by 
 ## Installation
 1. Clone the repository:
 ```
-git clone <https://github.com/IJustinChan/Travel-Planner.git>
+git clone https://github.com/IJustinChan/Travel-Planner.git
 ```
 
 2. Navigate to the project directory:
