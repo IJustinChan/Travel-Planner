@@ -18,7 +18,7 @@ database.database_name = database_name
 
 # Gemini API variables
 chat_history = []
-client = genai.Client(api_key="AQ.Ab8RN6JOTl2alK_9yJhuaisvXIgw2kN6hYZ6D_D-F076fCbH8Q")
+client = genai.Client(api_key="YOUR_API_KEY_HERE")
 
 
 

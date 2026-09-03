@@ -51,7 +51,7 @@ This project uses the Gemini API for the AI travel assistant. You will need to g
 
 Please visit Google AI Studio and use your Google Account to generate your own Gemini API key: https://aistudio.google.com/
 
-Next, copy and paste your API key into line 16 of `main.py`:
+Next, copy and paste your API key into line 21 of `main.py`:
 ```
 client = genai.Client(api_key="YOUR_API_KEY_HERE")
 ```
@@ -78,7 +78,7 @@ TRAVEL-PLANNER/
 │   ├── plan.html
 │   ├── trips.html
 │   └── weather_forecasts.html
-├── chatbot_gemini.py
+├── database.py
 ├── main.py
 ├── trips.db
 └── weather_information.py
