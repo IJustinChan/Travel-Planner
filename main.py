@@ -126,7 +126,8 @@ def view_trips():
     View all trips.
     """
     trips = get_trips()
-    return render_template("trips.html", trips=trips)
+    trips_status = separate_trips(trips)
+    return render_template("trips.html", trips=trips, trips_status=trips_status)
 
 @app.route('/plan/<int:trip_id>')
 def plan_trip(trip_id):
@@ -850,6 +851,32 @@ def build_itinerary(trip_id):
         grouped[date].append(item)
 
     return grouped
+
+def separate_trips(trip_list):
+    """
+    Separates trips into upcoming, ongoing, and past trips based on the current date.
+    :param trip_list: List of trips with 'start_date' and 'end_date' keys
+    :return: Dictionary with keys 'upcoming', 'ongoing', and 'past' containing lists of trips
+    """
+    separated_trips = {
+        'upcoming': [],
+        'ongoing': [],
+        'past': []
+    }
+    today = date.today()
+
+    for trip in trip_list:
+        start_date = datetime.strptime(trip['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(trip['end_date'], '%Y-%m-%d').date()
+
+        if end_date < today:
+            separated_trips['past'].append(trip)
+        elif start_date <= today <= end_date:
+            separated_trips['ongoing'].append(trip)
+        else:
+            separated_trips['upcoming'].append(trip)
+
+    return separated_trips
 
 # --- Gemini API Chatbot ---
 def generate_trip_summary(trip_data):

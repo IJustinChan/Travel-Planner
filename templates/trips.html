@@ -24,7 +24,7 @@
         </div>
     </header>
 
-    <main class="container">
+    <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -35,46 +35,135 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
 
-        <section class="display-container">
-            <h2>Your Trips ({{ trips|length }})</h2>
-            <div class="trips-grid">
-                {% if trips %}
-                    {% for trip in trips %}
-                        <div class="trip-card">
-                            <div class="trip-card-header">
-                                <h3>{{ trip['trip_name'] }}</h3>
-                                <div style="display:flex;gap:0.5rem;align-items:center;">
-                                    <span class="trip-badge">{{ trip['travel_mode'] or 'General' }}</span>
-                                    <a class="btn btn-primary" href="{{ url_for('plan_trip', trip_id=trip['id']) }}">Plan</a>
-                                </div>
-                            </div>
-                            <div class="trip-card-info">
-                                <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
-                                <p><strong>Duration:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
-                                {% if trip['budget'] %}
-                                    <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget']) }}</p>
-                                {% endif %}
-                                {% if trip['num_travelers'] %}
-                                    <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] }}</p>
-                                {% endif %}
-                                {% if trip['description'] %}
-                                    <p><strong>Notes:</strong> {{ trip['description'][:100] }}{% if trip['description']|length > 100 %}...{% endif %}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
+    <details open class="container display-container">
+        <summary>Ongoing Trips ({{ trips_status['ongoing']|length }})</summary>
+
+        <div class="trips-grid">
+            {% if trips_status['ongoing'] %}
+                {% for trip in trips_status['ongoing'] %}
                     <div class="trip-card">
                         <div class="trip-card-header">
-                            <h3>No trips yet</h3>
+                            <h3>{{ trip['trip_name'] }}</h3>
+                            <div style="display:flex;gap:0.5rem;align-items:center;">
+                                <span class="trip-badge">{{ trip['travel_mode'] or 'General' }}</span>
+                                <a class="btn btn-primary" href="{{ url_for('plan_trip', trip_id=trip['id']) }}">Plan</a>
+                            </div>
                         </div>
-                        <p class="trip-card-text">Start planning your first adventure by adding a new trip.</p>
+                        <div class="trip-card-info">
+                            <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
+                            <p><strong>Duration:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+                            {% if trip['budget'] %}
+                                <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget']) }}</p>
+                            {% endif %}
+                            {% if trip['num_travelers'] %}
+                                <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] }}</p>
+                            {% endif %}
+                            {% if trip['description'] %}
+                                <p><strong>Notes:</strong> {{ trip['description'][:100] }}{% if trip['description']|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
                     </div>
-                {% endif %}
-            </div>
-        </section>
-    </main>
+                {% endfor %}
+            {% else %}
+                <div class="trip-card">
+                    <div class="trip-card-header">
+                        <h3>No ongoing trips</h3>
+                    </div>
+                    <p class="trip-card-text">You don't have any ongoing trips.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </details>
+
+    <br>
+
+    <details open class="container display-container">
+        <summary>Upcoming Trips ({{ trips_status['upcoming']|length }})</summary>
+
+        <div class="trips-grid">
+            {% if trips_status['upcoming'] %}
+                {% for trip in trips_status['upcoming'] %}
+                    <div class="trip-card">
+                        <div class="trip-card-header">
+                            <h3>{{ trip['trip_name'] }}</h3>
+                            <div style="display:flex;gap:0.5rem;align-items:center;">
+                                <span class="trip-badge">{{ trip['travel_mode'] or 'General' }}</span>
+                                <a class="btn btn-primary" href="{{ url_for('plan_trip', trip_id=trip['id']) }}">Plan</a>
+                            </div>
+                        </div>
+                        <div class="trip-card-info">
+                            <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
+                            <p><strong>Duration:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+                            {% if trip['budget'] %}
+                                <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget']) }}</p>
+                            {% endif %}
+                            {% if trip['num_travelers'] %}
+                                <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] }}</p>
+                            {% endif %}
+                            {% if trip['description'] %}
+                                <p><strong>Notes:</strong> {{ trip['description'][:100] }}{% if trip['description']|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="trip-card">
+                    <div class="trip-card-header">
+                        <h3>No upcoming trips</h3>
+                    </div>
+                    <p class="trip-card-text">You don't have any upcoming trips.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </details>
+
+    <br>
+
+    <details class="container display-container">
+        <summary>Past Trips ({{ trips_status['past']|length }})</summary>
+
+        <div class="trips-grid">
+            {% if trips_status['past'] %}
+                {% for trip in trips_status['past'] %}
+                    <div class="trip-card">
+                        <div class="trip-card-header">
+                            <h3>{{ trip['trip_name'] }}</h3>
+                            <div style="display:flex;gap:0.5rem;align-items:center;">
+                                <span class="trip-badge">{{ trip['travel_mode'] or 'General' }}</span>
+                                <a class="btn btn-primary" href="{{ url_for('plan_trip', trip_id=trip['id']) }}">Plan</a>
+                            </div>
+                        </div>
+                        <div class="trip-card-info">
+                            <p><strong>Destination:</strong> {{ trip['destination'] }}{% if trip['country'] %}, {{ trip['country'] }}{% endif %}</p>
+                            <p><strong>Duration:</strong> {{ trip['start_date'] }} to {{ trip['end_date'] }}</p>
+                            {% if trip['budget'] %}
+                                <p><strong>Budget:</strong> ${{ "%.2f"|format(trip['budget']) }}</p>
+                            {% endif %}
+                            {% if trip['num_travelers'] %}
+                                <p><strong>Number of Travelers:</strong> {{ trip['num_travelers'] }}</p>
+                            {% endif %}
+                            {% if trip['description'] %}
+                                <p><strong>Notes:</strong> {{ trip['description'][:100] }}{% if trip['description']|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="trip-card">
+                    <div class="trip-card-header">
+                        <h3>No past trips</h3>
+                    </div>
+                    <p class="trip-card-text">You don't have any past trips.</p>
+                </div>
+            {% endif %}
+        </div>
+
+
+    </details>    
 
     <footer class="footer"></footer>
 
