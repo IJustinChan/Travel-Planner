@@ -4,6 +4,7 @@ import pathlib
 import sqlite3
 from datetime import datetime, date
 import pathlib
+import os
 
 from google import genai
 
@@ -18,7 +19,8 @@ database.database_name = database_name
 
 # Gemini API variables
 chat_history = []
-client = genai.Client(api_key="YOUR_API_KEY_HERE")
+api_key = os.getenv("GEMINI_API_KEY")  # Ensure you have set this environment variable
+client = genai.Client(api_key=api_key)
 
 
 

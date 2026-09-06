@@ -51,12 +51,10 @@ This project uses the Gemini API for the AI travel assistant. You will need to g
 
 Please visit Google AI Studio and use your Google Account to generate your own Gemini API key: https://aistudio.google.com/
 
-Next, copy and paste your API key into line 21 of `main.py`:
+Next, set up your API key as an environment variable. Copy and paste the following line of code into the terminal to connect to Gemini API:
 ```
-client = genai.Client(api_key="YOUR_API_KEY_HERE")
+$env:GEMINI_API_KEY="your_api_key_here"
 ```
-
-**Warning**: Do not commit API keys to the repository.
 
 ## Running the Program
 Once you have added your API key, start the Flask application by running `main.py`. Click the link that is generated and you will be able to access the website. 
